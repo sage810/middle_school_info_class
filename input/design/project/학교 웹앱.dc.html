@@ -188,6 +188,7 @@
                       <div style="padding:12px 8px; textAlign:center; borderRight:3px solid #4b3b6b; background:#f7f4fd">
                         <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">{{ r.period }}</div>
                         <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#8b7cb8">{{ r.time }}</div>
+                        <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#a89cc4">~{{ r.endTime }}</div>
                       </div>
                       <div style="padding:12px 16px; display:flex; alignItems:center; gap:11px">
                         <div style="{{ r.tagStyle }}">{{ r.subject }}</div>
@@ -217,6 +218,7 @@
                     <div style="padding:12px 6px; textAlign:center; borderRight:3px solid #4b3b6b; background:#f7f4fd">
                       <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">{{ row.period }}</div>
                       <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#8b7cb8">{{ row.time }}</div>
+                      <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#a89cc4">~{{ row.endTime }}</div>
                     </div>
                     <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="5">
                       <div style="{{ cell.cellStyle }}">
@@ -574,7 +576,7 @@ const SUB_COLOR = {
 };
 const ROOMS = { 음악:'음악실', 미술:'미술실', 체육:'체육관', 과학:'과학실', 기술가정:'실습실', 정보:'컴퓨터실', 보건:'보건실' };
 const TEACHERS = ['김하늘','박지우','이서연','최민준','정다온','한별','오유진'];
-const PERIODS = [['1교시','09:00','1ST'],['2교시','09:50','2ND'],['3교시','10:50','3RD'],['4교시','11:40','4TH'],['5교시','13:20','5TH'],['6교시','14:10','6TH'],['7교시','15:10','7TH']];
+const PERIODS = [['1교시','09:00','1ST','09:45'],['2교시','09:55','2ND','10:40'],['3교시','10:50','3RD','11:35'],['4교시','11:45','4TH','12:35'],['5교시','13:35','5TH','14:20'],['6교시','14:30','6TH','15:15'],['7교시','15:25','7TH','16:10']];
 const DAYS = ['월','화','수','목','금'];
 const MEAL_SETS = [
   { items:['기장밥','미역국','돈육간장구이','콩나물무침','깍두기'], kcal:682, icon:'🍚' },
@@ -635,9 +637,9 @@ class Component extends DCLogic {
     return n.getHours() * 60 + n.getMinutes();
   }
 
-  isPast(startStr) {
-    const [h, m] = startStr.split(':').map(Number);
-    return this.nowMin() > h * 60 + m + 45;
+  isPast(endStr) {
+    const [h, m] = endStr.split(':').map(Number);
+    return this.nowMin() > h * 60 + m;
   }
 
   chip(active, pal) {
@@ -712,11 +714,13 @@ class Component extends DCLogic {
 
     const dayRows = PERIODS.map((p, i) => {
       const sub = this.subjectAt(2, i);
-      const past = this.isPast(p[1]);
+      const past = this.isPast(p[3]);
       const [ph, pm] = p[1].split(':').map(Number);
+      const [eh, em] = p[3].split(':').map(Number);
       const start = ph * 60 + pm;
+      const end = eh * 60 + em;
       const nowM = this.nowMin();
-      const live = nowM >= start && nowM <= start + 45;
+      const live = nowM >= start && nowM <= end;
       const tagBase = "borderRadius:999px; padding:4px 12px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:12px; letterSpacing:.5px; whiteSpace:nowrap; ";
       return {
         statusLabel: past ? '완료' : live ? '진행 중' : '예정',
@@ -727,7 +731,7 @@ class Component extends DCLogic {
             : 'background:#fffdf7; color:#7b6ba8; border:2px dashed #cfc6e6; padding:2px 10px'),
         tagStyle: "border:2px solid #4b3b6b; borderRadius:8px; padding:4px 12px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px; whiteSpace:nowrap; background:" + SUB_COLOR[sub],
         rowStyle: 'display:grid; gridTemplateColumns:88px 1fr; borderBottom:2px dashed rgba(75,59,107,.22); background:' + (live ? '#f6f2ff' : '#fffdf7') + (past ? '; opacity:.45; filter:saturate(.4)' : ''),
-        period: p[0], periodEn: p[2] + ' · ' + p[0], time: p[1], subject: sub,
+        period: p[0], periodEn: p[2] + ' · ' + p[0], time: p[1], endTime: p[3], subject: sub,
         room: ROOMS[sub] || (s.grade + '-' + s.cls + ' 교실'),
         teacher: TEACHERS[(s.grade + s.cls + i) % TEACHERS.length] + ' 선생님',
         color: SUB_COLOR[sub]
@@ -736,11 +740,11 @@ class Component extends DCLogic {
 
     const TODAY_D = todayDow <= 4 ? todayDow : -1;
     const weekRows = PERIODS.map((p, i) => ({
-      period: p[0], time: p[1],
+      period: p[0], time: p[1], endTime: p[3],
       cells: DAYS.map((_, d) => {
         const sub = this.subjectAt(d, i);
         const t = d === TODAY_D;
-        const past = t && this.isPast(p[1]);
+        const past = t && this.isPast(p[3]);
         return {
           subject: sub,
           cellStyle: 'padding:8px 6px; borderRight:2px dashed rgba(75,59,107,.25); display:flex; alignItems:center; justifyContent:center' + (t ? '; background:rgba(123,92,214,.06)' : '') + (past ? '; opacity:.4; filter:saturate(.35)' : ''),
