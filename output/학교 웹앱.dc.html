@@ -188,6 +188,7 @@
                       <div style="padding:12px 8px; textAlign:center; borderRight:3px solid #4b3b6b; background:#f7f4fd">
                         <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">{{ r.period }}</div>
                         <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#8b7cb8">{{ r.time }}</div>
+                        <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#a89cc4">~{{ r.endTime }}</div>
                       </div>
                       <div style="padding:12px 16px; display:flex; alignItems:center; gap:11px">
                         <div style="{{ r.tagStyle }}">{{ r.subject }}</div>
@@ -217,6 +218,7 @@
                     <div style="padding:12px 6px; textAlign:center; borderRight:3px solid #4b3b6b; background:#f7f4fd">
                       <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">{{ row.period }}</div>
                       <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#8b7cb8">{{ row.time }}</div>
+                      <div style="fontFamily:'Silkscreen',monospace; fontSize:8px; color:#a89cc4">~{{ row.endTime }}</div>
                     </div>
                     <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="5">
                       <div style="{{ cell.cellStyle }}">
@@ -372,7 +374,8 @@
               <div style="padding:9px 14px; borderBottom:3px solid #4b3b6b; background:linear-gradient(90deg,#f9cade,#d6c4f5); fontFamily:'Silkscreen',monospace; fontSize:11px">TODAY_TOPIC</div>
               <div style="padding:20px 22px; display:flex; flexDirection:column; gap:8px">
                 
-                <div style="fontFamily:'GangwonEdu',sans-serif; fontSize:32px; lineHeight:1.3; textWrap:pretty">우리 학교를 소개하는 디지털 명함 만들기</div>
+                <div style="fontFamily:'GangwonEdu',sans-serif; fontSize:32px; lineHeight:1.3; textWrap:pretty">데이터 분석</div>
+                <div style="fontSize:15px; color:#8b7cb8">데이터로 문제를 해결하는 4단계를 배우고, 표에서 행·열·셀과 '속성'이 무엇인지 익혀요.</div>
                 
               </div>
             </div>
@@ -399,6 +402,33 @@
               </div>
             </div>
 
+            <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#fff6fb; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
+              <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#f9cade; display:flex; justifyContent:space-between; alignItems:center">
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">TODAY_GOALS</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#a65a86">GOAL</span>
+              </div>
+              <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:12px">
+                <div style="display:flex; alignItems:center; gap:10px">
+                  <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#f9cade; display:flex; alignItems:center; justifyContent:center; fontSize:15px">🎯</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">오늘의 목표</div>
+                </div>
+                <div style="display:flex; flexDirection:column; gap:8px; fontSize:15px; lineHeight:1.7">
+                  <div style="display:flex; gap:10px; padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">
+                    <span style="fontFamily:'CookieRun',sans-serif; fontWeight:700; color:#c96a97; flex:none">1</span>
+                    <span>'풀 수 있는 문제'가 되기 위한 3가지 조건을 설명할 수 있어요.</span>
+                  </div>
+                  <div style="display:flex; gap:10px; padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">
+                    <span style="fontFamily:'CookieRun',sans-serif; fontWeight:700; color:#c96a97; flex:none">2</span>
+                    <span>데이터 분석에 적합한 질문과 그렇지 않은 질문을 구분할 수 있어요.</span>
+                  </div>
+                  <div style="display:flex; gap:10px; padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">
+                    <span style="fontFamily:'CookieRun',sans-serif; fontWeight:700; color:#c96a97; flex:none">3</span>
+                    <span>표에서 행, 열, 셀이 무엇을 뜻하는지, '속성'이 무엇인지 설명할 수 있어요.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#eef9f8; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#a9dce4; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_1</span>
@@ -407,27 +437,31 @@
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:10px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#a9dce4; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">1</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">우리 학교를 떠올리는 낱말 세 개</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">풀 수 있는 문제 정하기</div>
                 </div>
-                <div style="fontSize:14px; color:#8b7cb8">예) 넓은 운동장, 도서관 고양이, 급식실 카레</div>
+                <div style="fontSize:14px; color:#8b7cb8">문제가 흐릿하면 데이터를 많이 모아도 무엇을 볼지 알 수 없어요. 아래 3가지를 모두 만족하는지 확인해요.</div>
                 <div style="display:grid; gridTemplateColumns:repeat(auto-fit, minmax(190px,1fr)); gap:12px">
                   <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#ffe0cc; padding:12px 14px; display:flex; flexDirection:column; gap:5px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a5a35">HINT_01</div>
-                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">학교 자랑거리</div>
-                    <div style="fontSize:14px; lineHeight:1.6">우리 학교에만 있는 것을 떠올려요.</div>
+                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a5a35">CHECK_01</div>
+                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">구체적인가?</div>
+                    <div style="fontSize:14px; lineHeight:1.6">'더 좋게'가 아니라 무엇을 얼마나 바꿀지 드러나야 해요.</div>
                   </div>
                   <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#d8f0c4; padding:12px 14px; display:flex; flexDirection:column; gap:5px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#4f7a33">HINT_02</div>
-                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">우리 반 분위기</div>
-                    <div style="fontSize:14px; lineHeight:1.6">친구들과 함께한 순간을 낱말로 적어요.</div>
+                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#4f7a33">CHECK_02</div>
+                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">데이터로 확인할 수 있는가?</div>
+                    <div style="fontSize:14px; lineHeight:1.6">숫자나 기록으로 답할 수 있는 질문이어야 해요.</div>
                   </div>
                   <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#cfeaf5; padding:12px 14px; display:flex; flexDirection:column; gap:5px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#356b80">HINT_03</div>
-                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">나를 담은 낱말</div>
-                    <div style="fontSize:14px; lineHeight:1.6">내가 좋아하는 것도 한 개 넣어요.</div>
+                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#356b80">CHECK_03</div>
+                    <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px">범위가 정해졌는가?</div>
+                    <div style="fontSize:14px; lineHeight:1.6">'전 세계'가 아니라 '우리 학교, 지난 1년'처럼 좁혀요.</div>
                   </div>
                 </div>
-                <textarea placeholder="여기에 적어요" value="{{ a1 }}" onChange="{{ setA1 }}" style="minHeight:88px; resize:vertical; padding:13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fff; fontSize:15px; lineHeight:1.7; outline:none"></textarea>
+                <div style="marginTop:4px; padding:12px 14px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; flexDirection:column; gap:6px">
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">🖊 데이터 분석을 할 질문으로 가장 적절하지 않은 것은?</div>
+                  <div style="fontSize:15px; lineHeight:1.9">① 최근 한 달간 미세먼지 농도는 어떻게 변했을까?<br>② 어떤 색깔이 가장 예쁜가?<br>③ 지난 한 달간 우리 반에서 지각은 몇 번 발생했는가?<br>④ 편의점에서 비 오는 날 우산이 평소보다 몇 개나 더 팔릴까?</div>
+                </div>
+                <textarea placeholder="가장 적절하지 않은 질문의 번호와 그렇게 생각한 이유를 적어요" value="{{ a1 }}" onChange="{{ setA1 }}" style="minHeight:88px; resize:vertical; padding:13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fff; fontSize:15px; lineHeight:1.7; outline:none"></textarea>
               </div>
             </div>
 
@@ -439,8 +473,19 @@
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:10px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#c4d8f7; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">2</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">활동 순서 체크</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">데이터 분석 4단계 익히기</div>
                 </div>
+                <div style="fontSize:14px; color:#8b7cb8">데이터로 문제를 해결하는 과정은 다음 4단계로 이어져요.</div>
+                <div style="display:flex; gap:6px; flexWrap:wrap; alignItems:center">
+                  <div style="padding:9px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#f9cade; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">1 문제 정하기</div>
+                  <span style="fontFamily:'Silkscreen',monospace; fontSize:12px">&gt;</span>
+                  <div style="padding:9px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#c4d8f7; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">2 데이터 수집·특성 파악</div>
+                  <span style="fontFamily:'Silkscreen',monospace; fontSize:12px">&gt;</span>
+                  <div style="padding:9px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#bfe9dd; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">3 데이터 분석하기</div>
+                  <span style="fontFamily:'Silkscreen',monospace; fontSize:12px">&gt;</span>
+                  <div style="padding:9px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fbe6a2; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">4 결과 해석·공유</div>
+                </div>
+                <div style="fontSize:14px; color:#8b7cb8; marginTop:2px">각 단계를 이해했으면 체크해요.</div>
                 <div style="display:flex; flexDirection:column; gap:8px">
                   <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
                     <div onClick="{{ s.toggle }}" style="{{ s.style }}">
@@ -455,49 +500,210 @@
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#fffaee; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#fbe6a2; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_3</span>
-                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a7132">DRAW</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a7132">TABLE</span>
               </div>
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:10px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#fbe6a2; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">3</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">명함에 넣을 그림 자리</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">표의 구조 — 행 · 열 · 셀</div>
                 </div>
-                <div style="height:150px; border:3px dashed #b3a8cc; borderRadius:10px; background:repeating-linear-gradient(45deg,#fffdf7,#fffdf7 10px,#f8f1e2 10px,#f8f1e2 20px); display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:11px; color:#9c8dc4">DRAWING / IMAGE DROP HERE</div>
+                <div style="fontSize:14px; color:#8b7cb8">엑셀·구글 시트는 가로와 세로로 이루어진 표예요. 아래 표를 보고 답해요.</div>
+                <div style="overflowX:auto">
+                  <div style="minWidth:320px; border:3px solid #4b3b6b; borderRadius:8px; overflow:hidden">
+                    <div style="display:grid; gridTemplateColumns:40px repeat(4,1fr); background:#eef2fb; borderBottom:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:11px; textAlign:center">
+                      <div style="padding:8px 0; borderRight:2px solid #4b3b6b"></div>
+                      <div style="padding:8px 0; borderRight:1px solid #cdd6e8">A</div>
+                      <div style="padding:8px 0; borderRight:1px solid #cdd6e8">B</div>
+                      <div style="padding:8px 0; borderRight:1px solid #cdd6e8">C</div>
+                      <div style="padding:8px 0">D</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:40px repeat(4,1fr); borderBottom:1px solid #cdd6e8; textAlign:center">
+                      <div style="padding:14px 0; background:#eef2fb; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:11px">1</div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0; background:#cfe0fb"></div>
+                      <div style="padding:14px 0"></div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:40px repeat(4,1fr); borderBottom:1px solid #cdd6e8; textAlign:center; background:#ffe8d6">
+                      <div style="padding:14px 0; background:#fbdcc0; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:11px">2</div>
+                      <div style="padding:14px 0; borderRight:1px solid #f0d6bf"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #f0d6bf"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #f0d6bf; background:#d9c2ec"></div>
+                      <div style="padding:14px 0"></div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:40px repeat(4,1fr); textAlign:center">
+                      <div style="padding:14px 0; background:#eef2fb; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:11px">3</div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0"></div>
+                      <div style="padding:14px 0; borderRight:1px solid #e5e0f0; background:#cfe0fb"></div>
+                      <div style="padding:14px 0"></div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex; flexDirection:column; gap:8px">
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; flexWrap:wrap; alignItems:center">
+                    <span style="fontSize:15px; flex:1; minWidth:200px">주황색으로 칠해진 줄은 무엇이라고 부를까요?</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">행</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">열</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">셀</span>
+                    </span>
+                  </div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; flexWrap:wrap; alignItems:center">
+                    <span style="fontSize:15px; flex:1; minWidth:200px">파란색으로 칠해진 줄은 무엇이라고 부를까요?</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">행</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">열</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">셀</span>
+                    </span>
+                  </div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; flexWrap:wrap; alignItems:center">
+                    <span style="fontSize:15px; flex:1; minWidth:200px">두 색이 겹쳐 보라색이 된 한 칸은 무엇이라고 부를까요?</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">행</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">열</span>
+                      <span style="border:2px solid #4b3b6b; borderRadius:7px; padding:3px 11px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px">셀</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#f8f4fe; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#d6c4f5; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_4</span>
-                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#6b559b">REFLECT</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#6b559b">READ</span>
               </div>
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:10px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#d6c4f5; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">4</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">수업 소감 한 줄</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">포켓몬 표 읽고 셀 주소 찾기</div>
                 </div>
-                <textarea placeholder="오늘 배운 것, 어려웠던 점을 적어요" value="{{ reflect }}" onChange="{{ setReflect }}" style="minHeight:76px; resize:vertical; padding:13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fff; fontSize:15px; lineHeight:1.7; outline:none"></textarea>
+                <div style="overflowX:auto">
+                  <div style="minWidth:420px; border:3px solid #4b3b6b; borderRadius:8px; overflow:hidden; fontSize:14px">
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; background:#e7f6ec; borderBottom:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px; textAlign:center">
+                      <div style="padding:7px 0; borderRight:2px solid #4b3b6b"></div>
+                      <div style="padding:7px 0; borderRight:1px solid #cfe4d6">A</div>
+                      <div style="padding:7px 0; borderRight:1px solid #cfe4d6">B</div>
+                      <div style="padding:7px 0; borderRight:1px solid #cfe4d6">C</div>
+                      <div style="padding:7px 0; borderRight:1px solid #cfe4d6">D</div>
+                      <div style="padding:7px 0">E</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; borderBottom:1px solid #d8e8dd; textAlign:center; fontFamily:'CookieRun',sans-serif; fontWeight:700">
+                      <div style="padding:9px 0; background:#e7f6ec; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px">1</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">포켓몬 이름</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">타입</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">체력</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">공격력</div>
+                      <div style="padding:9px 4px">방어력</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; borderBottom:1px solid #d8e8dd; textAlign:center">
+                      <div style="padding:9px 0; background:#e7f6ec; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px">2</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">피카츄</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">전기</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">35</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">55</div>
+                      <div style="padding:9px 4px">40</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; borderBottom:1px solid #d8e8dd; textAlign:center">
+                      <div style="padding:9px 0; background:#e7f6ec; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px">3</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">파이리</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">불꽃</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">39</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">52</div>
+                      <div style="padding:9px 4px">43</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; borderBottom:1px solid #d8e8dd; textAlign:center">
+                      <div style="padding:9px 0; background:#e7f6ec; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px">4</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">꼬부기</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">물</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">44</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">48</div>
+                      <div style="padding:9px 4px">65</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:36px 1.3fr 1fr .8fr .9fr .9fr; textAlign:center">
+                      <div style="padding:9px 0; background:#e7f6ec; borderRight:2px solid #4b3b6b; fontFamily:'Silkscreen',monospace; fontSize:10px">5</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">이상해씨</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">풀, 독</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">45</div>
+                      <div style="padding:9px 4px; borderRight:1px solid #eee">49</div>
+                      <div style="padding:9px 4px">49</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex; flexDirection:column; gap:10px">
+                  <div style="display:flex; flexDirection:column; gap:4px">
+                    <span style="fontSize:15px">(1) A2 셀에는 어떤 데이터가 들어있나요?</span>
+                    <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
+                  </div>
+                  <div style="display:flex; flexDirection:column; gap:4px">
+                    <span style="fontSize:15px">(2) 꼬부기의 타입이 들어있는 셀의 주소는 무엇인가요?</span>
+                    <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
+                  </div>
+                  <div style="display:flex; flexDirection:column; gap:4px">
+                    <span style="fontSize:15px">(3) 공격력이 가장 센 포켓몬의 이름은 무엇인가요?</span>
+                    <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
+                  </div>
+                  <div style="display:flex; flexDirection:column; gap:4px">
+                    <span style="fontSize:15px">(4) 이상해씨의 방어력을 알 수 있는 셀의 주소는 어디인가요?</span>
+                    <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
+                  </div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; fontSize:15px; lineHeight:2">정리해보면, 셀 주소는 <span style="display:inline-block; width:46px; borderBottom:2px solid #4b3b6b"></span> 을 먼저 쓰고, 그 다음 <span style="display:inline-block; width:46px; borderBottom:2px solid #4b3b6b"></span> 을 붙여서 만듭니다.</div>
+                </div>
               </div>
             </div>
 
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#f1fbf7; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#bfe9dd; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_5</span>
-                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#3d7f6c">SUBMIT</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#3d7f6c">FEATURE</span>
               </div>
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:10px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#bfe9dd; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">5</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">활동지 제출하기</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">속성(feature) 이해하기</div>
                 </div>
-                <div style="fontSize:14px; color:#8b7cb8">이름과 활동 내용을 다시 확인한 뒤 제출해요.</div>
-                <div style="fontSize:14px; color:#8b7cb8">아래 6·7번 활동까지 마치면 오늘 수업이 끝나요.</div>
-                <div style="display:flex; alignItems:center; gap:12px; flexWrap:wrap; marginTop:2px">
-                  <div onClick="{{ save }}" style="cursor:pointer; padding:12px 24px; border:3px solid #4b3b6b; borderRadius:10px; background:#9db2f2; color:#26224a; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:18px; boxShadow:4px 4px 0 rgba(75,59,107,.3)" style-active="cursor:pointer; padding:12px 24px; border:3px solid #4b3b6b; borderRadius:10px; background:#8296e0; color:#26224a; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:18px; boxShadow:1px 1px 0 rgba(75,59,107,.3); transform:translate(3px,3px)">💾 제출하기</div>
-                  <div onClick="{{ reset }}" style="cursor:pointer; padding:12px 20px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px; boxShadow:4px 4px 0 rgba(75,59,107,.2)">다시 쓰기</div>
-                  <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
-                    <div style="display:flex; alignItems:center; gap:8px; padding:9px 14px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; fontFamily:'Maplestory',sans-serif; fontWeight:700; fontSize:13px">SAVED! {{ savedName }} 님 활동지 제출 완료 ♥</div>
-                  </sc-if>
+                <div style="fontSize:14px; color:#8b7cb8">속성은 데이터 하나하나를 설명하고 서로 구별해 주는 항목이에요. 표에서는 한 열이 곧 한 속성이에요.</div>
+                <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:15px">2026년 상반기 일본 만화 판매량 TOP 10</div>
+                <div style="overflowX:auto">
+                  <div style="minWidth:460px; border:3px solid #4b3b6b; borderRadius:8px; overflow:hidden; fontSize:13px">
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; background:#e7f0fb; borderBottom:2px solid #4b3b6b; fontFamily:'CookieRun',sans-serif; fontWeight:700; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #d2dff0">순위</div>
+                      <div style="padding:8px 2px; borderRight:1px solid #d2dff0">만화 제목</div>
+                      <div style="padding:8px 2px; borderRight:1px solid #d2dff0">연재 시작 시기</div>
+                      <div style="padding:8px 2px; borderRight:1px solid #d2dff0">판매 부수</div>
+                      <div style="padding:8px 2px">완결 여부</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">1</div><div style="padding:8px 2px; borderRight:1px solid #eee">장송의 프리렌</div><div style="padding:8px 2px; borderRight:1px solid #eee">2020년 4월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 161만</div><div style="padding:8px 2px">연재 중</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">2</div><div style="padding:8px 2px; borderRight:1px solid #eee">원피스</div><div style="padding:8px 2px; borderRight:1px solid #eee">1997년 7월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 159만</div><div style="padding:8px 2px">연재 중</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">3</div><div style="padding:8px 2px; borderRight:1px solid #eee">주술회전</div><div style="padding:8px 2px; borderRight:1px solid #eee">2018년 3월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 143만</div><div style="padding:8px 2px">완결</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">4</div><div style="padding:8px 2px; borderRight:1px solid #eee">블루 록</div><div style="padding:8px 2px; borderRight:1px solid #eee">2018년 8월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 126만</div><div style="padding:8px 2px">연재 중</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">5</div><div style="padding:8px 2px; borderRight:1px solid #eee">체인소 맨</div><div style="padding:8px 2px; borderRight:1px solid #eee">2018년 12월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 114만</div><div style="padding:8px 2px">연재 중</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; borderBottom:1px solid #dde6f2; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">6</div><div style="padding:8px 2px; borderRight:1px solid #eee">주술회전 모듈로</div><div style="padding:8px 2px; borderRight:1px solid #eee">2025년 9월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 113만</div><div style="padding:8px 2px">완결</div>
+                    </div>
+                    <div style="display:grid; gridTemplateColumns:44px 1.3fr 1.1fr 1fr .9fr; textAlign:center">
+                      <div style="padding:8px 2px; borderRight:1px solid #eee">7</div><div style="padding:8px 2px; borderRight:1px solid #eee">스파이패밀리</div><div style="padding:8px 2px; borderRight:1px solid #eee">2019년 3월</div><div style="padding:8px 2px; borderRight:1px solid #eee">약 91만</div><div style="padding:8px 2px">연재 중</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex; flexDirection:column; gap:4px">
+                  <span style="fontSize:15px">이 표에서 '속성'은 모두 몇 개인가요?</span>
+                  <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
+                </div>
+                <div style="display:flex; flexDirection:column; gap:4px">
+                  <span style="fontSize:15px">'완결 여부'라는 속성의 열에는 어떤 값들이 있나요?</span>
+                  <div style="borderBottom:2px dashed rgba(75,59,107,.5); height:24px"></div>
                 </div>
               </div>
             </div>
@@ -505,29 +711,48 @@
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#fdf2fc; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#eec6ea; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_6</span>
-                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#7b3f74">SHARE</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#7b3f74">QUIZ</span>
               </div>
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:12px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#eec6ea; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">6</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">친구 명함 감상하고 사인 받기</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">형성평가 — 오늘의 실력 점검 (O / X)</div>
                 </div>
-                <div style="fontSize:14px; color:#8b7cb8">세 명에게 소개하고, 친구 이름과 한 줄 칭찬을 받아요.</div>
-                <div style="display:grid; gridTemplateColumns:repeat(auto-fit, minmax(200px,1fr)); gap:12px">
-                  <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#fffdf7; padding:12px 14px; display:flex; flexDirection:column; gap:10px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#9c8dc4">FRIEND_01</div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
+                <div style="display:flex; flexDirection:column; gap:8px">
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; alignItems:center; flexWrap:wrap">
+                    <span style="fontSize:15px; flex:1; minWidth:220px">1. '어떤 음악이 가장 아름다운가?'는 데이터로 답할 수 있는 질문이다.</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">O</span>
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">X</span>
+                    </span>
                   </div>
-                  <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#fffdf7; padding:12px 14px; display:flex; flexDirection:column; gap:10px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#9c8dc4">FRIEND_02</div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; alignItems:center; flexWrap:wrap">
+                    <span style="fontSize:15px; flex:1; minWidth:220px">2. 데이터로 해결할 문제를 정할 때, 문제의 범위는 넓을수록 데이터 분석이 쉬워진다.</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">O</span>
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">X</span>
+                    </span>
                   </div>
-                  <div style="border:3px solid #4b3b6b; borderRadius:11px; background:#fffdf7; padding:12px 14px; display:flex; flexDirection:column; gap:10px">
-                    <div style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#9c8dc4">FRIEND_03</div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
-                    <div style="borderBottom:2px dashed rgba(75,59,107,.4); height:24px"></div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; alignItems:center; flexWrap:wrap">
+                    <span style="fontSize:15px; flex:1; minWidth:220px">3. 표에서 가로줄은 '행'이라고 부른다.</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">O</span>
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">X</span>
+                    </span>
+                  </div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; alignItems:center; flexWrap:wrap">
+                    <span style="fontSize:15px; flex:1; minWidth:220px">4. 표에서 세로줄은 숫자(1, 2, 3…)로 표시된다.</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">O</span>
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">X</span>
+                    </span>
+                  </div>
+                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; display:flex; gap:10px; alignItems:center; flexWrap:wrap">
+                    <span style="fontSize:15px; flex:1; minWidth:220px">5. 행과 열이 만나는 하나의 칸을 '셀'이라고 부른다.</span>
+                    <span style="display:flex; gap:6px">
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">O</span>
+                      <span style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:50%; display:flex; alignItems:center; justifyContent:center; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:14px; background:#fffdf7">X</span>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -536,19 +761,22 @@
             <div style="border:3px solid #4b3b6b; borderRadius:14px; overflow:hidden; background:#fdf3f0; boxShadow:5px 5px 0 rgba(75,59,107,.18)">
               <div style="padding:8px 14px; borderBottom:3px solid #4b3b6b; background:#f7bfb2; display:flex; justifyContent:space-between; alignItems:center">
                 <span style="fontFamily:'Silkscreen',monospace; fontSize:11px">ACTIVITY_7</span>
-                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a4a3c">NEXT</span>
+                <span style="fontFamily:'Silkscreen',monospace; fontSize:10px; color:#8a4a3c">REFLECT</span>
               </div>
               <div style="padding:18px 20px 20px; display:flex; flexDirection:column; gap:12px">
                 <div style="display:flex; alignItems:center; gap:10px">
                   <div style="width:30px; height:30px; border:3px solid #4b3b6b; borderRadius:8px; background:#f7bfb2; display:flex; alignItems:center; justifyContent:center; fontFamily:'Silkscreen',monospace; fontSize:12px">7</div>
-                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">다음 시간 준비하기</div>
+                  <div style="fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:20px">수업 소감 & 활동지 제출</div>
                 </div>
-                <div style="display:flex; flexDirection:column; gap:8px; fontSize:15px; lineHeight:1.7">
-                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">📁 오늘 만든 명함 파일을 내 폴더에 저장하기</div>
-                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">🖨️ 다음 시간에 인쇄할 친구 세 명 정하기</div>
-                  <div style="padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7">🎒 준비물 — 색연필, 가위, 우리 반 사진 1장</div>
+                <div style="fontSize:14px; color:#8b7cb8">오늘 배운 것과 어려웠던 점을 적고, 이름과 활동 내용을 다시 확인한 뒤 제출해요.</div>
+                <textarea placeholder="오늘 배운 것, 어려웠던 점을 적어요" value="{{ reflect }}" onChange="{{ setReflect }}" style="minHeight:76px; resize:vertical; padding:13px; border:3px solid #4b3b6b; borderRadius:10px; background:#fff; fontSize:15px; lineHeight:1.7; outline:none"></textarea>
+                <div style="display:flex; alignItems:center; gap:12px; flexWrap:wrap; marginTop:2px">
+                  <div onClick="{{ save }}" style="cursor:pointer; padding:12px 24px; border:3px solid #4b3b6b; borderRadius:10px; background:#9db2f2; color:#26224a; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:18px; boxShadow:4px 4px 0 rgba(75,59,107,.3)" style-active="cursor:pointer; padding:12px 24px; border:3px solid #4b3b6b; borderRadius:10px; background:#8296e0; color:#26224a; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:18px; boxShadow:1px 1px 0 rgba(75,59,107,.3); transform:translate(3px,3px)">💾 제출하기</div>
+                  <div onClick="{{ reset }}" style="cursor:pointer; padding:12px 20px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px; boxShadow:4px 4px 0 rgba(75,59,107,.2)">다시 쓰기</div>
+                  <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; alignItems:center; gap:8px; padding:9px 14px; border:3px solid #4b3b6b; borderRadius:10px; background:#fffdf7; fontFamily:'Maplestory',sans-serif; fontWeight:700; fontSize:13px">SAVED! {{ savedName }} 님 활동지 제출 완료 ♥</div>
+                  </sc-if>
                 </div>
-                <div style="fontSize:14px; color:#8b7cb8">다음 주제 — 학교 소개 카드뉴스 만들기</div>
               </div>
             </div>
           </div>
@@ -574,7 +802,7 @@ const SUB_COLOR = {
 };
 const ROOMS = { 음악:'음악실', 미술:'미술실', 체육:'체육관', 과학:'과학실', 기술가정:'실습실', 정보:'컴퓨터실', 보건:'보건실' };
 const TEACHERS = ['김하늘','박지우','이서연','최민준','정다온','한별','오유진'];
-const PERIODS = [['1교시','09:00','1ST'],['2교시','09:50','2ND'],['3교시','10:50','3RD'],['4교시','11:40','4TH'],['5교시','13:20','5TH'],['6교시','14:10','6TH'],['7교시','15:10','7TH']];
+const PERIODS = [['1교시','09:00','1ST','09:45'],['2교시','09:55','2ND','10:40'],['3교시','10:50','3RD','11:35'],['4교시','11:45','4TH','12:35'],['5교시','13:35','5TH','14:20'],['6교시','14:30','6TH','15:15'],['7교시','15:25','7TH','16:10']];
 const DAYS = ['월','화','수','목','금'];
 const MEAL_SETS = [
   { items:['기장밥','미역국','돈육간장구이','콩나물무침','깍두기'], kcal:682, icon:'🍚' },
@@ -635,9 +863,9 @@ class Component extends DCLogic {
     return n.getHours() * 60 + n.getMinutes();
   }
 
-  isPast(startStr) {
-    const [h, m] = startStr.split(':').map(Number);
-    return this.nowMin() > h * 60 + m + 45;
+  isPast(endStr) {
+    const [h, m] = endStr.split(':').map(Number);
+    return this.nowMin() > h * 60 + m;
   }
 
   chip(active, pal) {
@@ -712,11 +940,13 @@ class Component extends DCLogic {
 
     const dayRows = PERIODS.map((p, i) => {
       const sub = this.subjectAt(2, i);
-      const past = this.isPast(p[1]);
+      const past = this.isPast(p[3]);
       const [ph, pm] = p[1].split(':').map(Number);
+      const [eh, em] = p[3].split(':').map(Number);
       const start = ph * 60 + pm;
+      const end = eh * 60 + em;
       const nowM = this.nowMin();
-      const live = nowM >= start && nowM <= start + 45;
+      const live = nowM >= start && nowM <= end;
       const tagBase = "borderRadius:999px; padding:4px 12px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:12px; letterSpacing:.5px; whiteSpace:nowrap; ";
       return {
         statusLabel: past ? '완료' : live ? '진행 중' : '예정',
@@ -727,7 +957,7 @@ class Component extends DCLogic {
             : 'background:#fffdf7; color:#7b6ba8; border:2px dashed #cfc6e6; padding:2px 10px'),
         tagStyle: "border:2px solid #4b3b6b; borderRadius:8px; padding:4px 12px; fontFamily:'CookieRun',sans-serif; fontWeight:700; fontSize:17px; whiteSpace:nowrap; background:" + SUB_COLOR[sub],
         rowStyle: 'display:grid; gridTemplateColumns:88px 1fr; borderBottom:2px dashed rgba(75,59,107,.22); background:' + (live ? '#f6f2ff' : '#fffdf7') + (past ? '; opacity:.45; filter:saturate(.4)' : ''),
-        period: p[0], periodEn: p[2] + ' · ' + p[0], time: p[1], subject: sub,
+        period: p[0], periodEn: p[2] + ' · ' + p[0], time: p[1], endTime: p[3], subject: sub,
         room: ROOMS[sub] || (s.grade + '-' + s.cls + ' 교실'),
         teacher: TEACHERS[(s.grade + s.cls + i) % TEACHERS.length] + ' 선생님',
         color: SUB_COLOR[sub]
@@ -736,11 +966,11 @@ class Component extends DCLogic {
 
     const TODAY_D = todayDow <= 4 ? todayDow : -1;
     const weekRows = PERIODS.map((p, i) => ({
-      period: p[0], time: p[1],
+      period: p[0], time: p[1], endTime: p[3],
       cells: DAYS.map((_, d) => {
         const sub = this.subjectAt(d, i);
         const t = d === TODAY_D;
-        const past = t && this.isPast(p[1]);
+        const past = t && this.isPast(p[3]);
         return {
           subject: sub,
           cellStyle: 'padding:8px 6px; borderRight:2px dashed rgba(75,59,107,.25); display:flex; alignItems:center; justifyContent:center' + (t ? '; background:rgba(123,92,214,.06)' : '') + (past ? '; opacity:.4; filter:saturate(.35)' : ''),
@@ -790,7 +1020,7 @@ class Component extends DCLogic {
       return { icon: m.icon, main: '', menu: m.items, chips: [] };
     });
 
-    const stepLabels = ['짝과 낱말 나누기', '그림 도구로 명함 꾸미기', '명함 파일 저장하기', '모둠 앞에서 소개하기'];
+    const stepLabels = ['1단계 · 문제 정하기', '2단계 · 데이터 수집 · 특성 파악', '3단계 · 데이터 분석하기', '4단계 · 결과 해석 · 공유'];
     const steps = stepLabels.map((l, i) => ({
       label: l, mark: s.checks[i] ? '✓' : '',
       style: 'cursor:pointer; display:flex; alignItems:center; gap:11px; padding:11px 13px; border:3px solid #4b3b6b; borderRadius:10px; background:' + (s.checks[i] ? '#eaf8f2' : '#fdf6fa'),
