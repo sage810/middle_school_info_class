@@ -16,3 +16,7 @@ scratchpad/
 .vscode/
 .idea/
 *.code-workspace
+
+# output/ 안의 뷰어용 복사본 (원본은 input/design/project/ 에 있음)
+output/fonts/
+output/support.js

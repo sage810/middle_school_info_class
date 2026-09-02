@@ -71,10 +71,11 @@
 | Display | **GangwonEduPower** (`GangwonEdu`) | `Do Hyeon` | 페이지·섹션 큰 제목 |
 | Round | **CookieRun** (700) | `Jua` | 소제목·버튼·칩·표 헤더·강조 라벨 |
 | Body | **Maplestory** (300 / 700) | `Gowun Dodum` | 본문·설명·긴 글 |
-| Pixel | **Silkscreen** (400/700) | `Silkscreen` (그대로) | 파일명 라벨·태그·시각·수치 |
-| Form | `Gowun Dodum` | `Gowun Dodum` | input/textarea/select/button |
+| Pixel | **Silkscreen** (400/700) | `Silkscreen` (그대로) | 파일명 라벨·태그·**영문/숫자 전용** |
+| Form | **Maplestory** (300) | `Gowun Dodum` | input/textarea/select/button |
 
-- 폰트 미리보기 파일 결론: **제목=GangwonEdu, 나머지=CookieRun(라운드) + Maplestory(본문)** 3단 위계. 픽셀 영문 라벨(Silkscreen)은 레트로 창 느낌 유지를 위해 항상 유지.
+- 폰트 미리보기 파일 결론: **제목=GangwonEdu, 나머지=CookieRun(라운드) + Maplestory(본문)** 3단 위계.
+- **한글 폰트 규칙**: 제목(GangwonEdu)을 제외한 모든 한글 텍스트는 **CookieRun 또는 Maplestory 로만** 지정한다. Silkscreen은 라틴 글리프만 있으므로 한글이 섞이는 라벨엔 쓰지 않는다(한글 부분이 시스템 기본 서체로 폴백됨). 픽셀 영문 라벨은 레트로 창 느낌 유지를 위해 그대로 둔다.
 - `body { font-family:'Maplestory'; font-weight:300; color:var(--ink); }`
 - 링크: `a{color:var(--link)} a:hover{color:var(--link-hover)}`
 
@@ -272,7 +273,7 @@ LUNCH.EXE     LOADING   MESSAGE      NOTE          TOTAL   READ ME
 ### 3.8 입력 필드
 
 ```css
-.field{font-family:'Gowun Dodum',sans-serif;color:var(--ink);font-size:16px;
+.field{font-family:'Maplestory',sans-serif;font-weight:300;color:var(--ink);font-size:16px;
   padding:11px 12px;border:3px solid var(--ink);border-radius:9px;
   background:var(--paper-pink);outline:none;}
 .field:focus{border-color:var(--pink-edge);background:#fff;}
