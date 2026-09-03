@@ -346,8 +346,22 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 
 ### 4.1 활동 카드 accent 순환
 
-원본 활동지 순서대로: 민트(`#a9dce4`) → 블루(`#c4d8f7`) → 옐로(`#fbe6a2`) → 퍼플(`#d6c4f5`) → 민트(`#bfe9dd`) → 라일락(`#eec6ea`) → 살구(`#f7bfb2`).
-같은 accent를 카드 헤더 스트립·번호 배지·힌트 강조에 함께 사용.
+8색 순환 (원본 활동지 순서 + 확장):
+
+| # | 색 | 토큰 | 배정 |
+|---|---|---|---|
+| 1 | `#a9dce4` | `--aqua` | ACTIVITY_1 |
+| 2 | `#c4d8f7` | `--blue` | ACTIVITY_2 |
+| 3 | `#fbe6a2` | `--yellow` | ACTIVITY_3 |
+| 4 | `#d6c4f5` | `--purple` | ACTIVITY_4 |
+| 5 | `#bfe9dd` | `--mint` | ACTIVITY_5 |
+| 6 | `#eec6ea` | `--lilac` | ACTIVITY_6 |
+| 7 | `#f7bfb2` | `--salmon` | ACTIVITY_7 |
+| 8 | `#e3e0b0` | `--olive` | ACTIVITY_8 |
+
+- **7번 = `--salmon #f7bfb2`**(문서 옛 표기 "살구"), **8번 = `--olive #e3e0b0`**. 둘 다 §2.1 팔레트의 기존 토큰 그대로이며, `--ink #4b3b6b` 글자가 그 위에서 대비 충분(§7, salmon ≈ 6:1 / olive ≈ 7:1).
+- 8번을 넘어가면 다시 1번(`--aqua`)으로 돌아가 순환한다.
+- 같은 accent를 카드 헤더 스트립·번호 배지·힌트 강조에 함께 사용.
 
 ### 4.2 과목별 색 (시간표 재현용)
 
@@ -484,3 +498,178 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 ```
 
 (§2.1 토큰 블록과 §3 의 나머지 컴포넌트 CSS를 함께 붙여 쓰세요.)
+
+---
+
+## 10. 플로팅 위젯 — 활동 진행률
+
+**적용 범위**: `학교 웹앱` 의 **수업 활동지 탭**(`state.tab==='sheet'`, `isSheet`)에서만 렌더한다. 다른 탭·다른 문서에는 쓰지 않는다.
+
+**목적**: 가운데 정렬된 본문(`max-width:1080px; margin:0 auto`) **바깥, 화면 왼쪽 여백**에 "활동 진행률" 카드를 띄우고, 스크롤해도 뷰포트에 고정되어 같은 자리에 보이게 한다. (2026-09-03: 오른쪽 → **왼쪽**으로 이동, 폭 축소 — 아래 10.1.) 진행률 원천은 활동지 입력 완료 항목 수(예: 이름칸 1 + 활동1 서술답 1 + 4단계 체크 4 + 소감칸 1 = 총 7) 대비 완료 수의 퍼센트. 실제 계산·바인딩은 builder 담당이고, 이 절은 **시각·토큰·구조만** 규정한다.
+
+이 위젯은 §3 의 기존 컴포넌트만으로는 표현되지 않는 **진행 바**를 포함한다. 진행 바는 §2.1 팔레트·§2.2 서체·§2.4 스케일 안에서만 구성했고 새 색·radius·서체를 만들지 않았다(아래 10.4 참고). 카드 껍데기·헤더 스트립·픽셀 라벨은 §3.5 활동 카드 / §3.3 픽셀 태그 패턴을 그대로 재사용한다.
+
+### 10.1 배치 (§2.3 · §8 준수)
+
+| 속성 | 값 | 근거 |
+|---|---|---|
+| `position` | `fixed` | 스크롤해도 뷰포트에 고정 |
+| `width` | **`120px`** (컴팩트, 허용 100–140px) | `left` calc 의 위젯폭 항과 일치. 좁게 만들어 겹침 구간을 최소화 |
+| `left` | `max(8px, calc((100vw - 1080px)/2 - 120px - 12px))` <br>(최상위 `zoom` 문서면 `1080px` → 시각폭, 예: `zoom:1.1` → `(100vw - 1188px)`) | 넓으면 본문 왼쪽 여백에 온전히(겹침 0), 여백 부족하면 `8px` clamp → 창 왼쪽 테두리 쪽과만 약간 겹침 |
+| `top` | `96~116px` (구현 시 미세조정) | 타이틀바/탭 아래에서 시작 |
+| `z-index` | `5` (낮게) | 타이틀바·탭(`z-index:2`)보다 시각적으로 앞서지 않도록 |
+
+- `left` calc 의 위젯폭 항(`120px`)은 `width` 와 **반드시 같은 수**.
+- **왼쪽 여백에 배치 + 컴팩트(120px)** 로, 시각 본문폭 1188px 기준 **뷰포트 ≈1470px 이상이면 본문과 전혀 안 겹친다**. 1300~1470px 은 창 왼쪽 테두리와 소폭 겹침(내용 카드는 안 가림). ~1280px 이하는 제목/첫 카드 좌상단과 겹침 — 그보다 좁으면 §10.2 로 숨긴다.
+- 컴팩트 판에서는 헤더 우측 보조 라벨(`.r`)과 하단 안내문(`.sp-note`)을 뺀다. 큰 수치는 `20px`, 카운트는 `n/7` 로 축약.
+- 본문 자체에는 가로 스크롤이 생기면 안 된다(§8). 위젯은 `fixed` 라 문서 흐름/스크롤폭에 기여하지 않지만, `right` 음수 계산이 뷰포트를 넘지 않도록 `max(8px, …)` 를 반드시 유지한다.
+
+### 10.2 반응형 — "가능하면 항상 보이게", 진짜 좁은 화면에서만 생략
+
+> **정정(2026-09-03)**: 이전 판은 "여백이 부족하면 숨긴다"였고 breakpoint 를
+> `max-width:1480px`(zoom 문서는 1700px)로 잡았다. 그런데 그러면 1366·1440·1536·1600
+> 같은 **일반 노트북 전부에서 위젯이 안 보였다.** → 전략을 바꾼다: 여백이 부족하면
+> **숨기지 말고 본문 오른쪽 끝에 살짝 겹쳐서라도 보여준다.** 숨김은 모바일/태블릿
+> 급(`max-width:820px`)에서만.
+
+```css
+.sheet-progress{
+  right: max(8px, calc((100vw - <본문 시각폭>px)/2 - <위젯폭>px - 12px));
+}
+@media (max-width:820px){ .sheet-progress{ display:none !important; } }
+```
+
+- `right` 의 `max(8px, …)` 가 반응형을 담당한다:
+  - **넓은 화면**: `calc(…)` 가 양수 → 위젯이 본문 바깥 오른쪽 여백에 온전히 들어간다(겹침 없음).
+  - **여백 부족(일반 노트북, ≈1300~1620px)**: `calc(…)` 가 음수 → `8px` 로 clamp 되어 위젯이 뷰포트 오른쪽 끝에 붙고, 본문 오른쪽 끝 카드 모서리와 **일부 겹친다**(진행률 카드는 작고 우상단이라 허용). 숨기는 것보다 낫다.
+  - **모바일/태블릿(`≤820px`)**: `display:none`. 활동지 본문 폼·체크 행에서 진행 상태 확인 가능하므로 정보 손실 없음(§7 — 위젯은 보조 표시).
+- 위젯폭은 `210px` 권장(겹침을 줄이려 §10.1 의 220px 에서 축소), 간격 `12px`, 최소 우측 여백 `8px`.
+- **최상위 `zoom` 보정**: 이 값은 문서에 확대가 없다는 전제다. `학교 웹앱`(`output/data4.html`)은 최상위 래퍼에 `zoom:1.1` 이 걸려 본문 `max-width:1080px` 가 **화면상 약 1188px** 로 보이므로, `calc` 의 본문 시각폭에 `1188px` 를 넣는다. 구현 상세는 `guide/build.md` "활동 진행률 플로팅 위젯" 절.
+
+| 문서 유형 | 본문 시각폭 | `right` calc 기준값 |
+|---|---|---|
+| zoom 없음 (기준) | 1080px | `(100vw - 1080px)/2 - 210px - 12px` |
+| `학교 웹앱`, `zoom:1.1` | ~1188px | `(100vw - 1188px)/2 - 210px - 12px` |
+
+두 경우 모두 숨김 breakpoint 는 `max-width:820px` 로 동일(뷰포트 실측이므로 zoom 무관).
+
+### 10.3 카드 스타일
+
+- 껍데기: `background:var(--paper)`(#fffdf7) · `border:3px solid var(--ink)`(#4b3b6b) · `border-radius:12px` · `box-shadow:5px 5px 0 var(--sh)`(rgba(75,59,107,.18), **오프셋만·blur 0**) · `overflow:hidden` · `display:flex; flex-direction:column`. → §2.4 "일반 카드" 행과 동일.
+- 헤더 스트립: `padding:8px 14px` · `border-bottom:3px solid var(--ink)` · `background:var(--purple)`(#d6c4f5) *또는* `var(--blue)`(#c4d8f7) · `font-family:'Silkscreen',monospace; font-size:11px` · `display:flex; justify-content:space-between; align-items:center`. → §3.5 `.card-head` 패턴.
+- 본문: `padding:14px` · `display:flex; flex-direction:column; gap:10px`. (개별 margin 금지, §2.3)
+
+### 10.4 진행 바 (§10 신규, 기존 토큰만)
+
+- 트랙: `height:12px` · `background:#ece9f3` (§2.1 "완료 상태" 배경색 = 옅은 파스텔 트랙으로 재사용) · `border:2px solid var(--ink)` · `border-radius:999px` (§2.4 알약) · `overflow:hidden`.
+- 필: `background:var(--blue-strong)`(#9db2f2) *또는* `var(--mint)`(#bfe9dd) — **단색만, 그라디언트 금지**(design.md 는 하드엣지·단색). `height:100%` · `width:<pct>%` (인라인 바인딩) · `transition:width .3s ease` (§10.5).
+- 상태색이 필요하면(예: 미시작 0% 강조, 완료 100% 강조) §2.1 상태색 표를 따른다. 임의 색 추가 금지.
+- 테두리 `2px` 는 §2.4 "내부 구분선/소형 요소" 스케일. 껍데기(3px)보다 얇게 두어 위계를 만든다.
+
+### 10.5 숫자·문구 표기 (§2.2)
+
+| 요소 | 서체 | 크기 | 색 |
+|---|---|---|---|
+| 라틴 라벨 `PROGRESS` / `WORKSHEET` | Silkscreen | 11px / (우측 10px, `opacity:.75`) | `var(--ink)` |
+| 한글 제목 "활동 진행률" | **CookieRun 700** (Silkscreen 금지 — §2.2 한글 규칙) | 16px (subtitle) | `var(--ink)` |
+| 큰 수치 `n%` 또는 `n / 7` | CookieRun 700 + `font-variant-numeric:tabular-nums` | 26px | `var(--ink)` |
+| 보조 문구 (`3 / 7 완료`, `저장됨` 등) | Maplestory 300 | 12–13px | `var(--muted)` (#8b7cb8) |
+| 제출 완료 표기 `✓ 제출 완료` | CookieRun 700, 알약(`border-radius:999px; padding:2px 10px`) | 12px | 배경 `#ece9f3` · 글자 `#8a82a6` (§2.1 완료 상태색) |
+
+### 10.6 인쇄 (§6)
+
+```css
+@media print{ .sheet-progress{ display:none !important; } }
+```
+
+조작·보조 플로팅 UI이므로 인쇄에서 완전히 숨긴다.
+
+### 10.7 모션 (§5)
+
+- 허용 트랜지션은 **필의 `width` 하나뿐**. 다른 애니메이션(floaty 등) 금지.
+
+```css
+@media (prefers-reduced-motion:reduce){ .sheet-progress .fill{ transition:none !important; } }
+```
+
+### 10.8 접근성 (§7)
+
+- 상태는 **색 + 글자 둘 다**: 진행 바(색/길이) + `n / 7`·`n%` 텍스트를 항상 함께 노출.
+- 트랙에 `role="progressbar"`, `aria-valuenow`(완료 수 또는 %), `aria-valuemin="0"`, `aria-valuemax`(7 또는 100), `aria-valuetext="7개 중 3개 완료"` 형태의 텍스트 병기. 최소한 인접 텍스트로 값을 읽을 수 있어야 한다.
+- 위젯은 정보 표시 전용이라 인터랙티브 요소가 없다. 만약 링크/버튼을 넣는다면 `:focus-visible{outline:3px solid var(--pink-edge);outline-offset:2px}` 유지.
+- 파스텔 위 흰 글자 금지(§7). 필 위에 글자를 얹지 않는다(수치는 트랙 밖에 별도 표기).
+- 좁은 화면에서 위젯이 사라져도 본문 폼으로 동일 정보 확인 가능(§10.2).
+
+### 10.9 복붙용 스니펫
+
+```css
+/* §10 플로팅 위젯 — 활동 진행률 (수업 활동지 탭 전용) · 왼쪽 여백 컴팩트 판 */
+.sheet-progress{
+  position:fixed;
+  top:96px;                          /* 타이틀바 아래 — 학교 웹앱은 116px */
+  left:max(8px, calc((100vw - 1080px)/2 - 120px - 12px));  /* zoom:1.1 문서면 1080→1188 */
+  width:120px;                       /* left calc 의 위젯폭 항과 동일 */
+  z-index:5;
+  display:flex;flex-direction:column;
+  background:var(--paper);           /* #fffdf7 */
+  border:3px solid var(--ink);       /* #4b3b6b */
+  border-radius:12px;
+  box-shadow:5px 5px 0 var(--sh);    /* rgba(75,59,107,.18) 오프셋만·blur 0 */
+  overflow:hidden;
+}
+.sheet-progress .sp-head{
+  padding:6px 10px;border-bottom:3px solid var(--ink);
+  background:var(--purple);          /* #d6c4f5 */
+  font-family:'Silkscreen',monospace;font-size:10px;text-align:center;
+}
+.sheet-progress .sp-body{padding:10px;display:flex;flex-direction:column;gap:7px;}
+.sheet-progress .sp-title{                 /* 한글 제목 — Silkscreen 금지 */
+  font-family:'CookieRun',sans-serif;font-weight:700;font-size:13px;color:var(--ink);line-height:1.3;
+}
+.sheet-progress .sp-count{display:flex;align-items:baseline;gap:4px;}
+.sheet-progress .sp-count .big{
+  font-family:'CookieRun',sans-serif;font-weight:700;font-size:20px;
+  font-variant-numeric:tabular-nums;color:var(--ink);
+}
+.sheet-progress .sp-count .sub{
+  font-family:'Maplestory',sans-serif;font-weight:300;font-size:11px;color:var(--muted);
+}
+.sheet-progress .track{
+  height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;
+  background:#ece9f3;                /* §2.1 완료 상태 배경 = 옅은 트랙 */
+}
+.sheet-progress .fill{
+  height:100%;width:0%;              /* 구현: width:<pct>% 인라인 바인딩 */
+  background:var(--blue-strong);     /* #9db2f2 단색 — 그라디언트 금지 */
+  transition:width .3s ease;
+}
+.sheet-progress .sp-done{             /* 제출 완료 보조 표기 (§2.1 완료 상태색) */
+  align-self:flex-start;padding:2px 8px;border-radius:999px;
+  background:#ece9f3;color:#8a82a6;
+  font-family:'CookieRun',sans-serif;font-weight:700;font-size:11px;
+}
+@media (max-width:820px){ .sheet-progress{ display:none !important; } }  /* 모바일/태블릿만 숨김 (§10.2) */
+@media print{ .sheet-progress{ display:none !important; } }
+@media (prefers-reduced-motion:reduce){ .sheet-progress .fill{ transition:none !important; } }
+```
+
+```html
+<aside class="sheet-progress" aria-label="활동 진행률">
+  <div class="sp-head"><span>PROGRESS</span><span class="r">WORKSHEET</span></div>
+  <div class="sp-body">
+    <div class="sp-title">활동 진행률</div>
+    <div class="sp-count">
+      <span class="big">43%</span>
+      <span class="sub">3 / 7 완료</span>
+    </div>
+    <div class="track" role="progressbar"
+         aria-valuenow="3" aria-valuemin="0" aria-valuemax="7"
+         aria-valuetext="7개 중 3개 완료">
+      <div class="fill" style="width:43%"></div>
+    </div>
+    <div class="sp-note">입력하면 자동으로 반영돼요</div>
+    <!-- 제출 완료 시에만 -->
+    <span class="sp-done">✓ 제출 완료</span>
+  </div>
+</aside>
+```

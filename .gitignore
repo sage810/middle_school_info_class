@@ -20,3 +20,17 @@ scratchpad/
 # output/ 안의 뷰어용 복사본 (원본은 input/design/project/ 에 있음)
 output/fonts/
 output/support.js
+
+# 보안: API 인증키 / 비밀정보
+.env
+.env.*
+scripts/neis.local.ps1
+**/*.local.ps1
+output/neis.config.js
+secrets/
+
+# 미리보기 임시 산출물
+output/__preview-*.html
+
+# 구글사이트 임베드본 (NEIS 인증키가 인라인으로 들어있어 커밋 제외)
+output/data3.html
