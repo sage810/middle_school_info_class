@@ -673,3 +673,167 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
   </div>
 </aside>
 ```
+
+---
+
+## 11. 순서 배열 / 드래그 슬롯 컴포넌트
+
+번호가 매겨진 칸(①②③④…)에 뒤섞인 칩을 올바른 순서로 끌어다 놓게 하는 컴포넌트.
+`output/data4.html` PREVIOUSLY 카드의 "4단계 순서 배열" 활동에서 처음 필요해져 추가했다.
+§3 의 기존 컴포넌트만으로는 "번호 칸 + 드롭" 조합이 없어 이 절을 신설하되, **새 색·서체·radius 를
+만들지 않았다.** §2.1 팔레트 · §2.2 서체 · §2.4 스케일 · §3.7 칩 · §3.12 드롭 영역 · §3.5 `.num` 배지 ·
+§3.11 강조(inset ring) 안에서만 구성했다.
+
+- 껍데기는 §3.5 활동 카드 본문 **안의 서브블록**으로 얹는다(전용 카드 창을 새로 만들지 않음).
+- 칩 = §3.7, 트레이·빈 칸 = §3.12, 번호 배지 = §3.5 `.num`, 드래그 오버 강조 = §3.11 의 `inset 0 0 0 4px #ee9dbf`.
+- 채점 정오답색은 **accent 순환(§4.1)과 무관한 의미색**으로, §2.1 팔레트의 `--green`/`--salmon`/`--mint` 만 쓴다.
+
+### 11.1 클래스 이름
+
+| 클래스 | 역할 |
+|---|---|
+| `.seq-activity` | 활동 전체 래퍼(flex column). 인쇄 `break-inside:avoid` 대상 |
+| `.seq-tray` | 미배치 칩 풀 + 드롭 영역(§3.12 점선 존) |
+| `.seq-chip` | 순서 칩(§3.7). 선택 = `.is-on` + `aria-pressed="true"`, 드래그 중 = `.is-dragging` |
+| `.seq-row` | 번호 배지 + 순서 칸 한 줄(§3.5 `.act-line`) |
+| `.seq-num` | 번호 배지 ①~④ (§3.5 `.num`). 배경은 부모 카드 헤더색 재사용 |
+| `.seq-slot` | 순서 칸. 빈칸 = 점선, `.is-filled` = 솔리드, `.is-over` = 드롭 대상 강조 |
+| `.seq-slot.is-correct` / `.is-wrong` | 채점 결과 상태색 |
+| `.seq-mark` | 슬롯 안 `✓`/`✗` 아이콘 박스(§3.9 체크 박스 축소판) |
+| `.seq-controls` | 확인·리셋 버튼 줄 |
+| `.seq-check-btn` / `.seq-reset-btn` | §3.10 primary / secondary 버튼 |
+| `.seq-result` | 결과 문구(`role="status" aria-live="polite"`) |
+
+### 11.2 토큰 기반 CSS 스니펫
+
+모든 테두리색 = `#4b3b6b`(`--ink`). 모든 그림자 = 오프셋만·blur 0·`rgba(75,59,107,α)`(§2.4).
+
+```css
+/* 래퍼 — §3.5 활동 카드 본문 안 서브블록 */
+.seq-activity{ display:flex; flex-direction:column; gap:10px; }
+
+/* 트레이 = 미배치 칩 풀 + 드롭 영역 (§3.12) */
+.seq-tray{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center; min-height:56px;
+  border:3px dashed #b3a8cc; border-radius:10px; padding:10px;
+  background:repeating-linear-gradient(45deg,#fffdf7,#fffdf7 10px,#f8f1e2 10px,#f8f1e2 20px);
+  font-family:'Silkscreen',monospace; font-size:11px; color:#9c8dc4;   /* 비었을 때 EMPTY */
+}
+.seq-tray.is-over{ border-color:#ee9dbf; background:#fdf6fa; }
+
+/* 순서 칩 (§3.7) */
+.seq-chip{
+  cursor:pointer; user-select:none;
+  padding:8px 15px; border:3px solid #4b3b6b; border-radius:9px;
+  background:#fffdf7; box-shadow:3px 3px 0 rgba(75,59,107,.15);   /* --sh-soft */
+  font-family:'CookieRun',sans-serif; font-weight:700; font-size:15px; color:#4b3b6b;
+}
+.seq-chip.is-on{                     /* 터치/키보드 선택 · aria-pressed="true" */
+  background:var(--accent,#d6c4f5);  /* 서브블록 accent = 부모 활동 카드 헤더색 재사용 */
+  box-shadow:2px 2px 0 rgba(75,59,107,.35); transform:translate(1px,1px);   /* --sh-press */
+}
+.seq-chip.is-dragging{ box-shadow:1px 1px 0 rgba(75,59,107,.35); transform:translate(3px,3px); }
+
+/* 순서 행 + 번호 배지 (§3.5 .act-line / .num) */
+.seq-row{ display:flex; align-items:center; gap:10px; }
+.seq-num{
+  width:30px; height:30px; flex:none;
+  border:3px solid #4b3b6b; border-radius:8px; background:var(--accent,#d6c4f5);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'CookieRun',sans-serif; font-weight:700; font-size:14px; color:#4b3b6b;
+}
+/* 번호 글리프는 ①②③④ 원문자. Silkscreen 은 라틴 전용이라 금지(§2.2) */
+
+/* 순서 칸 (§3.12 빈칸 → 채워지면 솔리드) */
+.seq-slot{
+  flex:1; min-height:44px; display:flex; align-items:center; justify-content:center;
+  padding:6px 12px; border:3px dashed #b3a8cc; border-radius:10px; background:#fdf6fa;
+  font-family:'Silkscreen',monospace; font-size:10px; color:#9c8dc4;   /* placeholder */
+}
+.seq-slot.is-over{ box-shadow:inset 0 0 0 4px #ee9dbf; }               /* §3.11 강조 */
+.seq-slot.is-filled{ border:3px solid #4b3b6b; background:#fffdf7; justify-content:flex-start; }
+
+/* 채점 상태색 — accent(§4.1) 와 별개인 의미색(§2.1) · 테두리는 항상 #4b3b6b */
+.seq-slot.is-correct{ background:#d8f0c4; }   /* --green  · .seq-mark 에 ✓ */
+.seq-slot.is-wrong{   background:#f7bfb2; }   /* --salmon · .seq-mark 에 ✗ */
+.seq-mark{
+  width:24px; height:24px; flex:none; border:3px solid #4b3b6b; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; font-size:14px; background:#fffdf7;
+}
+.seq-slot.is-correct .seq-mark{ background:#bfe9dd; }   /* --mint */
+
+/* 조작부 (§3.10) */
+.seq-controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.seq-check-btn,.seq-reset-btn{
+  cursor:pointer; padding:11px 20px; border:3px solid #4b3b6b; border-radius:10px;
+  font-family:'CookieRun',sans-serif; font-weight:700; font-size:16px;
+}
+.seq-check-btn{ background:#9db2f2; color:#26224a; box-shadow:4px 4px 0 rgba(75,59,107,.3); }
+.seq-reset-btn{ background:#fffdf7; color:#4b3b6b; box-shadow:4px 4px 0 rgba(75,59,107,.2); }
+.seq-check-btn:active{ background:#8296e0; box-shadow:1px 1px 0 rgba(75,59,107,.3); transform:translate(3px,3px); }
+
+/* 결과 문구 — 상태에 따라 색을 바꾸지 않음(의미는 아이콘·문장으로) */
+.seq-result{ font-family:'CookieRun',sans-serif; font-weight:700; font-size:14px; color:#4b3b6b; }
+
+/* 포커스 (§7) — 인라인 outline:none 금지 */
+.seq-chip:focus-visible,.seq-slot:focus-visible,
+.seq-check-btn:focus-visible,.seq-reset-btn:focus-visible{
+  outline:3px solid #ee9dbf; outline-offset:2px;
+}
+
+/* 모션 (§5) */
+@media (prefers-reduced-motion:reduce){ .seq-chip{ transition:none !important; } }
+```
+
+### 11.3 상태색 (accent 와 별개)
+
+| 상태 | 배경 | 아이콘 박스 | 아이콘 | 비색 채널(§7) |
+|---|---|---|---|---|
+| 정답 `.is-correct` | `#d8f0c4` (`--green`) | `#bfe9dd` (`--mint`) | `✓` | 아이콘 + 결과 문장 "4칸 중 n칸 정답" |
+| 오답 `.is-wrong` | `#f7bfb2` (`--salmon`) | `#fffdf7` | `✗` | 아이콘 + 결과 문장 |
+| 미채점 | `#fffdf7`(채워짐) / `#fdf6fa`(빈칸) | — | — | — |
+
+- §3.9 체크 행의 on-state(`#eaf8f2` 배경 · `#bfe9dd` 박스)와 같은 계열. 오답색 `--salmon` 은 §4.1 이
+  팔레트 정식 토큰으로 확인(`--ink` 대비 ≈ 6:1).
+- **테두리는 어떤 상태에서도 `#4b3b6b`**. 파스텔 테두리로 상태를 표시하지 않는다(§2.4·§7).
+- 색만으로 구분하지 않도록 `✓`/`✗` 글리프와 결과 문장을 항상 함께 렌더한다. 정답 배열(정순서)은
+  텍스트로 노출하지 않는다 — 부분 정답은 "몇 칸 맞음"만 알리고 칸별 색/아이콘으로 위치를 보여준다.
+- 리셋·재섞기 시 `.is-correct`/`.is-wrong` 클래스를 모두 제거한다.
+
+### 11.4 접근성 (§7)
+
+- 칩 = `<button type="button" aria-pressed>` + `aria-label`("순서 카드: 문제 정하기" 식). 다시 누르면 선택 해제.
+- 빈 슬롯 = `aria-label`("순서 1번 자리 …"), 칩이 놓이면 "① 자리: 문제 정하기"처럼 현재 내용을 반영.
+- 결과 표시 = `role="status"` / `aria-live="polite"`.
+- 키보드: 칩·슬롯 포커스 가능(`<button>` 또는 `role="button" tabindex="0"`), Enter/Space = 선택/놓기, Esc = 해제.
+- 포커스 링 `:focus-visible{outline:3px solid #ee9dbf;outline-offset:2px}` 유지, 인라인 `outline:none` 금지.
+- `prefers-reduced-motion` 시 칩 이동 트랜지션 생략.
+
+### 11.5 인쇄 (§6)
+
+```css
+@media print{
+  .seq-activity{ break-inside:avoid; }            /* 활동 전체가 페이지 경계에서 안 쪼개짐 */
+  .seq-tray{ display:none; }                       /* 미배치 칩 풀은 인쇄 불필요 */
+  .seq-slot{ border:2px solid #4b3b6b; background:#fff; }
+  .seq-slot.is-correct,.seq-slot.is-wrong{ background:#fff; }   /* 색 → 아이콘/텍스트로 대체 */
+  .seq-slot.is-correct .seq-mark::after{ content:' ✓ 정답'; }
+  .seq-slot.is-wrong   .seq-mark::after{ content:' ✗ 다시'; }
+  /* .seq-num 배경(부모 카드 헤더색)은 정보 위계라 유지 — §6 "색 헤더 유지" */
+}
+```
+
+- `.seq-activity` 를 §6 전역 print 블록의 `break-inside:avoid` 셀렉터 목록에 추가한다
+  (활동 카드가 `.card` 클래스가 아니라 인라인 스타일 `<div>` 인 파일에서는 이 규칙이 자동 적용되지 않으므로 명시 필요).
+- 그림자는 §6 전역 규칙(`*{box-shadow:none !important}`)으로 이미 제거된다.
+- 채점 색(초록/살구)은 흰 배경으로 떨어뜨리고 `✓`/`✗` + 텍스트로만 정오답을 구분(§7).
+
+### 11.6 진행률(§10) 비포함 사유
+
+- §10 플로팅 위젯의 진행률은 활동지 입력 완료 **항목 수**를 세는 값이고, 그 집계는 컴포넌트 `state`
+  (예: `renderVals()` 의 체크리스트 배열)에서 읽는다. 순서 배열은 DOM/드래그 상태 기반이라 이 집계에
+  자동으로 잡히지 않는다.
+- 역할이 **선행 조직자**(본 활동 전 전체 골격을 세워 보는 준비 단계)라, 객관식 카드처럼 완료율
+  대상에서 제외하는 것이 기본이다.
+- 굳이 포함하려면: 채점 엔진이 결과("4/4 정답" 또는 "4칸 모두 채움")를 `state` 에 write 하고,
+  진행률 집계 배열에 그 값을 원소로 추가한 뒤, 리셋 핸들러에서 함께 초기화한다. 이때만 위젯 분모가 1 늘어난다.

@@ -196,3 +196,108 @@ const sheetWidgetDisplay= s.tab === 'sheet' ? 'flex' : 'none';
 
 ### 안 건드린 것
 기존 6색·레이아웃·진행률 위젯 색(`#d6c4f5`/`#9db2f2`/`#ece9f3`), `SUB_PALETTE`, `SUB_COLOR(_EXT)`.
+
+---
+
+## 순서 배열 드래그 활동 (PREVIOUSLY 카드)
+
+### 목적
+수업 활동지 탭 PREVIOUSLY 카드에 "데이터로 문제를 해결하는 4단계"의 **순서 자체**를 학생이 복원하는
+선행 조직자(advance organizer) 활동을 얹는다. 뒤섞인 칩 4장(문제 정하기 / 데이터 수집·특성 파악 /
+데이터 분석하기 / 결과 해석·공유)을 번호 칸 ①~④ 로 끌어다 놓고 `✅ 순서 확인` 으로 채점한다.
+spec `spec/data4-4steps-sequencing.activity.md` · brief `brief/data4-4steps-sequencing.build-brief.md` ·
+design.md **§11**(순서 배열 / 드래그 슬롯 컴포넌트) 계약을 그대로 구현.
+
+### 바꾼 위치 (data4.html)
+| 부분 | 행 범위(수정 후) | 내용 |
+|---|---|---|
+| `<style>` (helmet) | 93–165 | design.md §11.2 `.seq-*` 스니펫 이식(`.seq-activity/.seq-head/.seq-tag/.seq-title/.seq-hint/.seq-tray/.seq-chip/.seq-rows/.seq-row/.seq-num/.seq-slot/.seq-mark/.seq-controls/.seq-check-btn/.seq-reset-btn/.seq-result` + `:focus-visible` + `prefers-reduced-motion`). 색·px 는 §2 토큰만, 테두리는 모든 상태에서 `#4b3b6b`. |
+| `<style>` (helmet) | 166–179 | **전역 `@media print` 신설**(이 파일엔 없던 블록). |
+| PREVIOUSLY 카드 본문 | 613–649 (약 36줄 추가) | NOTE 박스(`#fbe6a2`) `</div>` 직후, 카드 본문 래퍼 안. `2px dashed rgba(75,59,107,.28)` 구분선 1줄 + `.seq-activity` 블록(헤더 `ORDER`+제목, 발문 `<p>`, `#seqTrayPrev` 칩 4개, `.seq-rows` 슬롯 4칸, `.seq-controls` 확인/리셋/결과). 기존 복습 불릿 3개·NOTE 는 유지. |
+| `</body>` 앞 | 1640–1909 (약 270줄, 새 `<script>` 1개) | 순서 배열 엔진(IIFE). x-dc `<script type="text/x-dc">` 와 별개인 순수 vanilla `<script>`. DClogic 클래스·`renderVals`·`componentDidMount` 는 건드리지 않음. |
+| 1074행 `closest('#mangaTable')` | (불변) | dragstart 위임 스코프를 넓히지 않음 — 넓히면 `.seq-chip` 드래그가 `preventDefault` 로 막힌다. |
+
+### 방식과 이유
+- **엔진 신규**: data4 에는 data3 계열 dnd 엔진(CSS/JS)이 전혀 없어 CSS·마크업·JS 를 새로 넣었다.
+  다음 순서 배열 활동은 `.seq-*` 마크업만 추가하면 이 엔진이 그대로 배선한다(`.seq-activity` 단위로 스코프).
+- **document 위임 (activity guide §1-8 패턴)**: PREVIOUSLY 카드는 `<sc-if value="{{ isSheet }}">` 안이라
+  다른 탭에선 렌더되지 않고 탭 전환마다 언마운트/재마운트된다. 그래서 칩·슬롯·버튼에 직접
+  `addEventListener` 하지 않고 `document` 에 `click`/`keydown`/`dragstart`·`dragover`·`dragenter`·
+  `dragleave`·`dragend`·`drop` 을 한 번만 위임 등록하고, 핸들러에서 `e.target.closest('.seq-activity …')`
+  로 이 활동 안 이벤트만 처리한다.
+- **상태 보관 = DOM-only + 매 마운트 재init (spec §7 대안 B)**: 칩 위치는 DOM(어느 슬롯/트레이의
+  자식인가)만으로 표현한다. 새 `.seq-activity` 노드가 나타나면 `MutationObserver` → `scan()` →
+  `initActivity()` 가 `data-seq-init="1"` 이 없을 때 1회 배선(슬롯 `aria-label` 동기화, 트레이 `is-empty`).
+  칩 초기 뒤섞임 `["step3","step1","step4","step2"]` 는 **정적 마크업**에 그대로 박아 두어 JS 실패·인쇄에도
+  순서가 남는다. React(support.js) 재렌더는 정적 서브트리를 건드리지 않으므로 60초 `now` tick 에도
+  배치가 유지되고, **탭 전환 시에만** 초기 뒤섞임으로 리셋된다(spec 이 감수한 트레이드오프).
+- **마우스 드래그**: HTML5 DnD. 찬 슬롯에 놓으면 두 칩 자리 교환(다른 슬롯에서 온 경우) 또는 기존 칩을
+  트레이로 되돌림(트레이에서 온 경우). 슬롯 밖(트레이)에 놓으면 칩은 트레이로 복귀. `zoom:1.1` 대응으로
+  좌표 산술 없이 **이벤트 타깃(`closest`)만** 사용.
+- **터치/키보드 대체**: 칩(`<button type="button" aria-pressed>`) 클릭 = 선택 토글(`.is-on`), 선택 상태에서
+  슬롯 클릭 = 배치, 빈손으로 찬 슬롯 클릭 = 칩 회수, 트레이 클릭 = 선택 칩 회수. 슬롯은
+  `role="button" tabindex="0"` 이라 Enter/Space 를 수동 처리, Esc 는 어디서나 선택 해제. 칩은 네이티브
+  버튼 클릭 경로를 그대로 쓴다(Space/Enter 이중 처리 방지).
+- **채점(`✅ 순서 확인`)**: 슬롯 4칸이 다 안 차면 `incomplete` 문구만. 다 차면 칸별로
+  `slot.dataset.answer === chip.dataset.answerKey` 비교 → `.is-correct`(`#d8f0c4`+`.seq-mark ✓`) /
+  `.is-wrong`(`#f7bfb2`+`.seq-mark ✗`), `#seqResultPrev`(`role="status"`)에 `"4칸 모두 정답! "` /
+  `"4칸 중 {n}칸 정답. "` / `"4칸 중 0칸 정답. "` + spec §4 피드백 문구. 정답 배열은 텍스트로 노출하지 않음.
+- **리셋(`🔄 다시 섞기`)**: 모든 슬롯 비우고 칩을 트레이로 복귀, Fisher–Yates 로 **정답과 다른** 순열 재배치,
+  채점 클래스·결과 문구·선택 상태 초기화.
+- **진행률 비포함**: spec §7-1 / design.md §11.6 대로 `renderVals` 의 `sheetChecklist`(7항목)에 넣지 않음.
+  선행 조직자라 완료율 대상 아님. 넣으려면 엔진이 결과를 `state` 에 write + 체크리스트 원소 추가 필요.
+
+### 새 클래스 / id
+- 클래스: `.seq-activity` · `.seq-head` · `.seq-tag` · `.seq-title` · `.seq-hint` · `.seq-tray`
+  (`.is-over`/`.is-empty`) · `.seq-chip`(`.is-on`/`.is-dragging`) · `.seq-rows` · `.seq-row` · `.seq-num` ·
+  `.seq-slot`(`.is-over`/`.is-filled`/`.is-correct`/`.is-wrong`) · `.seq-mark` · `.seq-controls` ·
+  `.seq-check-btn` · `.seq-reset-btn` · `.seq-result`
+- id: `seqTrayPrev`(트레이) · `seqSlotPrev1`~`seqSlotPrev4`(슬롯) · `seqResultPrev`(결과, `role="status"`)
+- data 속성: 칩 `data-value="seq-prev-stepN"` / `data-answer-key="stepN"`, 슬롯 `data-slot` /
+  `data-check-group="seqTrayPrev"` / `data-answer="stepN"`, 버튼 `data-target-tray="seqTrayPrev"` /
+  `data-result-id="seqResultPrev"`, 활동 노드 런타임 플래그 `data-seq-init="1"`
+- 정답(슬롯→칩): `seqSlotPrev1→step1` · `seqSlotPrev2→step2` · `seqSlotPrev3→step3` · `seqSlotPrev4→step4`
+  (유일 해, 초기 뒤섞임 `step3, step1, step4, step2`)
+
+### `@media print` 신설 내용 (data4.html 에 전역 print 블록이 없었음)
+```css
+@media print {
+  @page { margin: .5cm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      animation: none !important; transition-duration: 0s !important; }
+  * { box-shadow: none !important; }                 /* 잉크 절약 (design.md §6) */
+  figure, table, .card, .seq-activity { break-inside: avoid; }
+  .seq-tray { display: none; }                        /* 미배치 칩 풀 숨김 */
+  .seq-slot { border: 2px solid #4b3b6b; background: #fff; }
+  .seq-slot.is-correct, .seq-slot.is-wrong { background: #fff; }   /* 색 → 아이콘/텍스트 */
+  .seq-slot.is-correct .seq-mark::after { content: ' ✓ 정답'; }
+  .seq-slot.is-wrong .seq-mark::after { content: ' ✗ 다시'; }
+  .seq-num { background: #d6c4f5; }                   /* 색 배지 정보위계 유지 */
+}
+```
+- `.sheet-progress` 전용 `@media print`(위젯 숨김, 27~92행)는 그대로 두고 이 전역 블록을 추가로 신설.
+
+### 재현 체크리스트
+1. 수업 활동지 탭 → PREVIOUSLY 카드 맨 아래, NOTE 박스 밑에 `2px dashed` 구분선 + `ORDER` 라벨 +
+   "오늘 쓸 4단계, 순서부터 맞춰 보기" 제목 + 뒤섞인 칩 4장(첫 칩 = "데이터 분석하기") + ①~④ 빈 칸이 보인다.
+2. 칩 클릭 → 보라(`#d6c4f5`) 강조 + `aria-pressed="true"`. 이어서 빈 칸 클릭 → 칩이 그 칸으로 이동,
+   칸이 솔리드(`.is-filled`)로 바뀌고 슬롯 `aria-label` 이 "① 자리: 데이터 분석하기" 로 갱신.
+3. 마우스로 칩을 칸에 드래그해도 배치됨. 찬 칸끼리 드래그하면 두 칩이 교환됨. 칸의 칩을 트레이로
+   드래그하면 복귀. 트레이가 비면 `EMPTY` 표시.
+4. 정답 순서(문제 정하기 / 데이터 수집·특성 파악 / 데이터 분석하기 / 결과 해석·공유)로 채운 뒤
+   `✅ 순서 확인` → 4칸 모두 `#d8f0c4` + `✓`, `#seqResultPrev` = "4칸 모두 정답! …".
+5. 일부만 맞추고 확인 → 맞은 칸 초록+`✓`, 틀린 칸 `#f7bfb2`+`✗`, 결과 = "4칸 중 n칸 정답. …"(정답 배열은
+   노출 안 됨). 빈 칸이 있으면 "빈 칸이 있어요…" 만 표시(채점 안 함).
+6. `🔄 다시 섞기` → 슬롯 비고 트레이가 정답과 다른 새 순열로 재배치, 채점 색/결과 문구/선택 초기화.
+7. 키보드: Tab 으로 칩·슬롯·버튼 이동 시 `:focus-visible` = `outline:3px solid #ee9dbf; outline-offset:2px`.
+   칩에서 Enter/Space = 선택, 슬롯에서 Enter/Space = 배치/회수, Esc = 선택 해제.
+8. 다른 탭으로 갔다가 활동지 탭으로 복귀 → 활동이 초기 뒤섞임으로 리셋(정적 마크업 재마운트, 의도된 동작).
+9. Ctrl+P 인쇄 미리보기 → `.seq-tray` 숨김, 슬롯은 흰 배경 + `2px` 검정 테두리, 채점 칸은
+   `✓ 정답` / `✗ 다시` 텍스트, 번호 배지 `#d6c4f5` 유지, `.seq-activity` 가 페이지 경계에서 안 쪼개짐.
+10. ACTIVITY_5 `#mangaTable` 복사 방지·시간표·급식·진행률 위젯 등 기존 기능은 변화 없음.
+
+### 검증 결과 (조립 시점)
+- 새 `<script>` 블록: 중괄호 72/72 · 소괄호 250/250 · 대괄호 10/10 · 백틱 0, 구문 오류 없음
+  (Microsoft.JScript 컴파일: `document`/`MutationObserver` 미정의 경고만 — 브라우저 전역이라 정상).
+- 태그 델타: `<div>`/`</div>` 426/426 균형. `<script>`/`</script>` 새로 1쌍 추가.
+

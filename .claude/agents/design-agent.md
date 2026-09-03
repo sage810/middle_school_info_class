@@ -1,7 +1,7 @@
 ---
 name: design-agent
 description: >
-  guide/design.md 디자인 시스템("신현중학교 알림창" 레트로 창 UI)의 가디언.
+  guide/design.md 디자인 시스템("신현중학교 정보" 레트로 창 UI)의 가디언.
   두 가지 일을 한다 — (1) 활동 spec을 design.md 컴포넌트에 매핑한 빌드 지시서(build-brief) 작성,
   (2) 완성된 활동지 HTML을 design.md와 대조해 토큰·컴포넌트·인쇄·접근성 위반을 목록화하는 검수.
   새 시각 스타일은 만들지 않는다. "디자인 적용 지시서 만들어줘", "디자인 충실도 검수해줘" 류에 사용.
