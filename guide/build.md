@@ -301,3 +301,116 @@ design.md **§11**(순서 배열 / 드래그 슬롯 컴포넌트) 계약을 그�
   (Microsoft.JScript 컴파일: `document`/`MutationObserver` 미정의 경고만 — 브라우저 전역이라 정상).
 - 태그 델타: `<div>`/`</div>` 426/426 균형. `<script>`/`</script>` 새로 1쌍 추가.
 
+
+---
+
+## 구글 사이트 임베드용 자체완결화 (data4_1.html)
+
+`output/data4_1.html` = `data4.html` 의 **구글 사이트 "삽입 → 코드 삽입"(HTML 붙여넣기)** 용 파생본.
+URL 호스팅(GitHub Pages)은 원본으로 충분하지만, 코드 붙여넣기는 임베드 iframe 샌드박스 CSP가
+외부 `<script src>` · 웹폰트 요청을 막아 폰트·런타임이 깨진다. 그래서 외부 의존을 인라인한다.
+(**`data4.html` 은 수정하지 않는다.** data4_1.html 만.)
+
+### 인라인한 것 (`<head>`, dc-runtime `<script>` 앞)
+1. **React 18.3.1 UMD production** (`react.production.min.js`, ~10.8KB) — `<script>` 인라인.
+2. **ReactDOM 18.3.1 UMD production** (`react-dom.production.min.js`, ~132KB) — `<script>` 인라인 (React 다음).
+   - UMD 래퍼가 `self`(=iframe window) 에 `window.React` / `window.ReactDOM` 를 세팅 → dc-runtime 의
+     `loadReactUmd()` 가 `if (w.React && w.ReactDOM) return Promise.resolve();` 로 unpkg fetch 를 **스킵**.
+   - `src/cdn.ts` 의 `REACT_URL` / `REACT_DOM_URL` / `BABEL_URL` 상수는 `""` 로 비우고 원본 URL 은 `/* was … */` 주석으로 보존(실행 경로에서 안 쓰임, Babel 은 이 문서에서 미사용).
+3. **디자인 실서체 7종 woff2 → base64 `@font-face` 로 `<head>` 인라인 `<style>` 에 전부 인라인** (`@import` 없음, 외부참조 0):
+
+   | family | weight | 파일 (출처: `cdn.jsdelivr.net/gh/fonts-archive/…`) | 용도 |
+   |---|---|---|---|
+   | `GangwonEdu` | 400 | `GangwonEduPower/GangwonEduPower.woff2` (~180KB) | 페이지·섹션 큰 제목 |
+   | `CookieRun` | 400 | `CookieRun/CookieRun-Regular.woff2` (~338KB) | (드묾) |
+   | `CookieRun` | 700 | `CookieRun/CookieRun-Bold.woff2` (~339KB) | 소제목·버튼·칩·표헤더·강조 |
+   | `Maplestory` | 300 | `Maplestory/Maplestory-Light.woff2` (~234KB) | body 기본·본문·폼 |
+   | `Maplestory` | 700 | `Maplestory/Maplestory-Bold.woff2` (~245KB) | 본문 강조 |
+   | `Silkscreen` | 400 / 700 | Google Fonts gstatic woff2 (latin 서브셋, ~16KB) | 픽셀 영문 라벨 |
+
+   - `data4.html` 과 **동일 서체**: data4.html 은 GangwonEdu 를 jsdelivr `GangwonEduPower.woff2` 로, CookieRun/Maplestory 를 로컬 `output/fonts/*.ttf` 로 쓴다. jsdelivr woff2 는 그 TTF 와 같은 폰트(용량만 1/10). `output/fonts/GangwonEduTteunTteun.ttf` 는 **다른 변형**이라 안 씀 — 기준은 `GangwonEduPower`.
+   - **CookieRun-Black 은 포함 안 함**(디자인에서 미사용). Silkscreen 은 latin 서브셋만(한글 라벨 없음).
+
+### 폰트 전략 — 왜 이렇게 하나
+- 예전엔 `@import url(fonts.googleapis.com…Do+Hyeon,Jua,Gowun+Dodum,Silkscreen)` + 시스템 폴백으로 뒀으나,
+  구글 사이트 임베드에서 `@import` 가 막히면 디자인 서체가 통째로 시스템 폰트로 떨어져 **원본과 안 맞았다**.
+- 이제 **실서체 5종을 base64 로 인라인**해 `data4.html` 과 픽셀 동일. woff2 라 5종 합쳐도 ~1.34MB(base64 ~1.78MB).
+  글리프 서브셋은 안 한다 — NEIS 실시간 데이터(급식·과목명)의 글리프를 빌드시 알 수 없어 누락(두부) 위험. woff2 풀셋이면 안전.
+- **font 이름 치환**(이전 `@import` 대체본 → 실서체): 파일 전체에서
+  `'Do Hyeon'`→`'GangwonEdu'` (×7), `'Jua'`→`'CookieRun'` (×74 + `\'…\'` 이스케이프형 ×2), `'Gowun Dodum'`→`'Maplestory'` (×7). `'Silkscreen'` (×86) 은 유지.
+- **각 스택 뒤 한글 시스템 폴백은 그대로 유지**(최후 폴백): `…, Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, sans-serif` / 픽셀은 `…, Apple SD Gothic Neo, Malgun Gothic, monospace`. (따옴표 없는 CSS 식별자 시퀀스 — JS 문자열 이스케이프 충돌 회피.)
+- `<helmet>` 의 google-fonts `<link>`/`preconnect` 는 이미 없음. `@import` 줄도 삭제.
+
+### 최종 상태
+- 파일 크기: **약 2.33MB** (원본 ~381KB + React/ReactDOM ~143KB + 실서체 7종 base64 ~1.8MB).
+- **실행되는 외부 참조: 0.**
+  - `@import` 삭제, 폰트 7종 전부 base64 인라인.
+  - `unpkg` ×3 은 `var …_URL = "";` (원본 URL 은 `/* was … */` 주석). fetch 안 함(React 인라인).
+  - `open.neis.go.kr` 는 원래부터 무인증 fetch + 인라인 스냅샷 폴백(임베드에서 막혀도 시간표·급식은 스냅샷 표시). 그대로 둠.
+  - `reactjs.org`(에러 디코더 URL), `w3.org`(SVG ns) 는 React/SVG 내부 문자열 — 네트워크 요청 아님.
+- 기존 동작 100% 유지: 4탭 / NEIS fetch+스냅샷 폴백 / 시간표 자동선택·지난날 흐림·일간 절삭 / 급식 이름정리 / 진행률 위젯 / 만화표 복사방지 / 인쇄 CSS.
+- `hideRawTemplate()`(`x-dc{display:none!important}`) 그대로 → 하이드레이션 전 raw 템플릿 안 보임.
+
+### data4.html 이 바뀌면 data4_1.html 재생성하는 법
+1. 바뀐 `data4.html` 을 base 로 시작.
+2. `<helmet>` 의 google-fonts `<link>`/`preconnect` 삭제.
+3. 폰트 이름 치환: `'GangwonEdu'`/`'CookieRun'`/`'Maplestory'`/`'Silkscreen'` 스택 끝에 한글 폴백 추가
+   (`'CookieRun', sans-serif` → `'CookieRun', Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, sans-serif` 등, JS `\'…\'` 형태 포함). 픽셀은 `…, monospace`.
+   (data4.html 이 이미 GangwonEdu/CookieRun/Maplestory 를 쓰면 이름 치환은 불필요, 폴백만 추가.)
+4. woff2 7종 curl → `base64 -w0`:
+   ```
+   cdn.jsdelivr.net/gh/fonts-archive/GangwonEduPower/GangwonEduPower.woff2
+   cdn.jsdelivr.net/gh/fonts-archive/CookieRun/CookieRun-Regular.woff2
+   cdn.jsdelivr.net/gh/fonts-archive/CookieRun/CookieRun-Bold.woff2
+   cdn.jsdelivr.net/gh/fonts-archive/Maplestory/Maplestory-Light.woff2
+   cdn.jsdelivr.net/gh/fonts-archive/Maplestory/Maplestory-Bold.woff2
+   # Silkscreen 400/700: fonts.googleapis.com/css2?family=Silkscreen:wght@400;700 → latin 서브셋 woff2 URL
+   ```
+5. `<head>` 의 dc-runtime `<script>` **앞**에: `<style>`(GangwonEdu 400 + CookieRun 400/700 + Maplestory 300/700 + Silkscreen 400/700 `@font-face`, `font-display:swap`) → React UMD `<script>` → ReactDOM UMD `<script>` 순으로 삽입.
+6. `src/cdn.ts` 의 `REACT_URL`/`REACT_DOM_URL`/`BABEL_URL` 을 `""` 로.
+7. 헤드리스로 **완전 오프라인**(`--host-resolver-rules="MAP * ~NOTFOUND"`) 렌더 → data4.html 로컬본(fonts 폴더 포함)과 폰트 픽셀 동일 확인.
+
+### 검증 결과 (2026-09-04, 폰트 실서체화 후)
+- **완전 오프라인(`MAP * ~NOTFOUND`)**: 앱 정상 부팅(React 인라인). 4탭 모두 렌더.
+  제목 = **GangwonEduPower**, 소제목/칩/버튼/표헤더/진행률 = **CookieRun Bold**, 본문/폼 = **Maplestory Light**, 픽셀 라벨 = **Silkscreen**.
+- **data4.html 로컬본(네트워크 허용, GangwonEdu 는 jsdelivr) 대비**: rules·sheet 탭 스크린샷 비교 시 **글자꼴·굵기·줄바꿈 위치까지 픽셀 동일**. 두부(□) 없음.
+
+---
+
+## "PDF로 저장하기" 버튼 — 클릭 한 번에 다운로드 (data4_1.html 전용)
+
+`guide/pdf download.md` 가 기술하는 방식(html2canvas 캡처 → jsPDF `pdf.save()` 즉시 다운로드)을
+data4_1.html 에 이식. **`data4.html` 은 건드리지 않는다** — data4_1.html 만.
+(data4.html 은 GitHub Pages URL 임베드용이라 외부 CDN `<script src>` 로 html2canvas/jsPDF 를
+불러오면 되지만, data4_1.html 은 "실행되는 외부 참조 0" 계약이라 라이브러리도 인라인해야 한다.)
+
+### 인라인한 것 (`<head>`, ReactDOM `<script>` 바로 뒤 · dc-runtime `<script>` 앞)
+1. **html2canvas 1.4.1** (`cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js`, ~194KB) — `<script>` 인라인. `window.html2canvas` 노출.
+2. **jsPDF 2.5.1 UMD** (`cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js`, ~356KB) — `<script>` 인라인. `window.jspdf.jsPDF` 노출.
+   - 둘 다 원본 파일에 `</script>`·`<!--` 리터럴 없음(그대로 인라인해도 파싱 안 깨짐).
+
+### `savePdf` 재작성 (renderVals 안, `<sc-if isSheet>` 컴포넌트 `<script>`)
+- 라이브러리(`window.html2canvas`·`window.jspdf.jsPDF`) 또는 `#sheetPrintArea` 가 없으면
+  **기존 폴백 유지**: `document.body.classList.add('print-sheet-only')` + `window.print()`
+  (오프라인·CSP 차단 환경). 이 경로용 `@media print body.print-sheet-only` CSS 는 그대로 둠.
+- 정상 경로:
+  1. `#sheetPrintArea` 를 `cloneNode(true)` → 화면 밖(`position:fixed; left:-10000px`) `width:820px` 흰 배경 holder 에 넣음. **원본 화면은 안 건드림**(zoom:1.1 래퍼 밖이라 좌표 왜곡도 없음).
+  2. 복제본에서: `#pdfBtn` 묶음(버튼+SAVED 배지) `display:none`, `.seq-tray`/`.ca-tray` `display:none`,
+     **모든 `textarea.blank` → `<div>`**(원본 `liveEl.value` 를 읽어 같은 모양 상자로; html2canvas 가 textarea 내부 글자를 못 그림), 중복 `id` 전부 제거.
+  3. `document.fonts.ready` (1.5s 상한 `Promise.race`) → 80ms → `html2canvas(clone, {scale:2, backgroundColor:'#ffffff', useCORS:true})`.
+  4. jsPDF `'p','pt','a4'` 문서에 캔버스를 페이지 높이(`canvas.width * ph/pw`)만큼 잘라 여러 장으로 삽입.
+     각 조각은 **JPEG(품질 0.9)** — PNG 로 하면 페이지당 십수 MB(전체 ~79MB)라 반드시 JPEG.
+  5. `pdf.save(fname + '.pdf')` — 브라우저 표준 다운로드(대개 "다운로드" 폴더). 파일명 규칙은 기존과 동일(`학년+반(2)+번호(2) 이름 활동지.pdf`, 하나라도 비면 `활동지.pdf`).
+  6. `finally`: holder 제거, 버튼 문구/활성 복구. 성공 시 `setState({saved:true})` 로 SAVED 배지 + 진행률 위젯 갱신.
+- 페이지 나누기는 **기계적 균등 분할**(data3.html 의 `findSafeBreak` 금지구간 회피 로직은 이식 안 함).
+  표/활동 카드가 페이지 경계서 갈릴 수 있으나 활동지 특성상 허용 범위로 판단. 필요해지면 그때 이식.
+
+### 파일 크기
+- 약 2.33MB → **약 2.89MB** (html2canvas ~194KB + jsPDF ~356KB 인라인분).
+
+### 검증 (2026-09-04, 헤드리스 Chrome `--virtual-time-budget`)
+- 인라인 후 앱 정상 부팅(React/dc-runtime 와 html2canvas/jsPDF 충돌 없음). 4탭 렌더 정상. 콘솔 에러 0.
+- `window.html2canvas`=function, `window.jspdf.jsPDF`=function 노출 확인.
+- 수업 활동지 탭 → 이름칸 입력 → `#pdfBtn` 클릭: 복제본 캡처 canvas **1544×12856(scale 2)**,
+  **6페이지 A4 PDF** 생성 성공. JPEG 0.9 기준 blob 크기 정상(수 MB 대). holder 정리·버튼 복구 확인.
+- `data4.html 이 바뀌면 재생성` 절차에 추가할 것: 위 `<head>` 인라인 2종 + `savePdf` 재작성.
