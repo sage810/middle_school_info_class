@@ -167,6 +167,44 @@
 
 **검증**: `getComputedStyle(el).userSelect === 'none'`, 표 셀에서 `copy`/`cut`/`contextmenu`/`dragstart` 이벤트를 dispatch 했을 때 `e.defaultPrevented === true`, 표 밖 요소에서는 `false`. `.table-scroll` 이 좁은 뷰포트에서 여전히 가로 스크롤되는지도 확인.
 
+### 1-9. 이미지 붙여넣기 칸 (CODAP 그래프 등 캡처 붙여넣기)
+
+학생이 화면 캡처(Win+Shift+S)한 그래프를 활동지 안에 직접 붙여넣는 칸입니다. `output/data5.html`(데이터 시각화)의
+"📷 여기에 CODAP 그래프를 붙여넣으세요" 칸에 적용. **상태는 DOM-only**(칸 안 `<img>` 1장) — `Component.state` 에 넣지 않습니다.
+
+**마크업** — 칸 + 조작 버튼 묶음(둘은 형제):
+```html
+<div class="ans-lbl">📷 여기에 CODAP 그래프를 붙여넣으세요</div>
+<div class="paste-zone" data-zone="유일값" role="button" tabindex="0" aria-label="… 그래프 붙여넣기 칸">
+  <div class="paste-empty"><span class="pz-caret" aria-hidden="true"></span>📷 이 칸을 <span class="kbd">클릭</span>한 뒤 <span class="kbd">Ctrl + V</span> 로 …<br><span class="sm">(그림 파일을 끌어다 놓아도 돼요 · 지우기: 🗑 버튼 또는 Delete)</span></div>
+</div>
+<div class="pz-controls">
+  <button type="button" class="pz-copy">📋 복사</button>
+  <button type="button" class="pz-clear">🗑 지우기</button>
+</div>
+```
+
+**동작** (`</body>` 앞 vanilla IIFE 하나, `document` 위임):
+- **붙여넣기**: `paste` 이벤트에서 `document.activeElement.closest('.paste-zone')` 또는 마지막으로 누른 칸(`lastZone`, `mousedown`/`focusin` 으로 기록)을 대상으로, `clipboardData.items`/`files` 에서 `type` 이 `image/*` 인 것을 `FileReader.readAsDataURL` → `<img>` 로 삽입, `.is-filled` 부여. 이미 그림이 있으면 교체.
+- **드래그&드롭**: `dragover` `preventDefault` + `.is-over`, `drop` 에서 `dataTransfer.files[0]` 를 같은 경로로 처리.
+- **삭제**: `.pz-clear` 클릭 → **`btn.parentElement(.pz-controls).previousElementSibling`** 로 같은 렌더 복제본의 칸을 찾아 비운다(전역 `document.querySelector('[data-zone=…]')` 는 `<x-dc>` 의 **숨은 raw 템플릿 복제본**을 먼저 잡아 화면 칸이 안 지워짐 — §1-9 주의). 칸에 포커스가 있을 때 `Delete`/`Backspace` 로도 삭제.
+- **복사**: `.pz-copy` 클릭 → 저장해 둔 dataURL(`zone._imgData`)을 `Blob` 으로 바꿔 `navigator.clipboard.write([new ClipboardItem({'image/png': blob})])`. 실패(비보안 컨텍스트 등)하면 "그림 우클릭 → 복사" 안내로 폴백.
+
+**커서(캐럿) 보이기** — 학생이 "여기를 눌러 Ctrl+V 하면 되는구나"를 알도록, 칸을 텍스트 입력칸처럼 보이게 한다:
+- CSS: `.paste-zone{cursor:text}` (마우스 I-beam), `.paste-zone:focus{border-style:solid;border-color:#4b3b6b;background:#fff;box-shadow:inset 0 0 0 3px #ee9dbf}` (강한 포커스 링).
+- 깜빡이는 캐럿: `.pz-caret{display:none}` → `.paste-zone:focus:not(.is-filled) .pz-caret{display:inline-block;width:2px;height:1.15em;background:#4b3b6b;animation:pzblink 1s step-end infinite}`,
+  `@keyframes pzblink{50%{opacity:0}}`, `@media (prefers-reduced-motion:reduce){.pz-caret{animation:none!important}}`.
+- 칸은 `tabindex="0"` 라 클릭·Tab 으로 포커스를 받는다. 그림이 들어가면(`.is-filled`) 캐럿·`cursor:text` 는 사라진다.
+
+**통합 주의**:
+- **진행률**: `updateProgress`/`sheetChecklist` 계산 대상 아님(§2-3). 넣으려면 붙여넣기/삭제 시 `Component.state` 에 플래그를 write 하고 체크리스트에 원소 추가.
+- **자동저장**: 이미지가 커서 localStorage 부적합 — 저장 안 함(칸은 세션 동안만 유지).
+- **PDF (`savePdf` / html2canvas)**: 칸 안 `<img>`(dataURL)는 그대로 캡처된다. **조작 버튼은 결과물에서 숨긴다** — `savePdf` 복제본 처리에서 `clone.querySelectorAll('.seq-tray, .ca-tray, .pz-controls')` 를 `display:none`.
+- **인쇄(`@media print`)**: `.pz-controls{display:none!important}`, `.paste-zone{border:2px solid #4b3b6b;background:#fff;min-height:150px}`.
+- **안티치트**: `.paste-zone` 은 `<div>` 라 `input.blank`/`textarea.blank` 스코프의 붙여넣기 차단·타이핑 가드와 무관. 전역 `paste` `preventDefault` 는 없어야 한다(있으면 이미지 붙여넣기가 막힘).
+
+**검증**: 칸 클릭 → 강한 테두리 + 깜빡이는 세로 막대(캐럿). Ctrl+V(또는 그림 드래그) → `<img>` 표시·`.is-filled`. 🗑/Delete → 원상복귀. 📋 → 클립보드에 이미지. "PDF로 저장하기" 결과에 그림 포함, 버튼은 미포함.
+
 ## 2. 새 활동을 추가할 때 반드시 지켜야 하는 공통 규칙
 
 1. **모든 입력형 요소(input/textarea)에 `aria-label` 유일값 부여.** 자동저장·불러오기·타이핑 속도 감지(부정행위 방지)가 전부 이 속성 기준으로 동작합니다.
