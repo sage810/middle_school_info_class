@@ -41,6 +41,13 @@
   --lilac:  #eec6ea;
   --beige:  #e8d9b8;   --olive:      #e3e0b0;
 
+  /* 예비 파스텔 (accent 9번+ · 새 카드 유형용. 위 8색과 채도·명도 같은 계열, --ink 대비 ≥ 6:1) */
+  --sage:      #c9e4dc;   /* 흐린 민트 */
+  --sky-2:     #b8d8e8;   /* 흐린 하늘 (기존 --sky 보다 진함) */
+  --moss:      #d4e0b0;   /* 흐린 연두 */
+  --rose-dust: #e8c4c4;   /* 흐린 장미 */
+  --peri:      #c4cce8;   /* 흐린 보라-파랑 */
+
   /* 글자 보조색 */
   --muted:     #8b7cb8;   /* 설명·캡션 */
   --muted-2:   #6b5b93;   /* 비활성 탭 글자 */
@@ -362,6 +369,7 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 - **7번 = `--salmon #f7bfb2`**(문서 옛 표기 "살구"), **8번 = `--olive #e3e0b0`**. 둘 다 §2.1 팔레트의 기존 토큰 그대로이며, `--ink #4b3b6b` 글자가 그 위에서 대비 충분(§7, salmon ≈ 6:1 / olive ≈ 7:1).
 - 8번을 넘어가면 다시 1번(`--aqua`)으로 돌아가 순환한다.
 - 같은 accent를 카드 헤더 스트립·번호 배지·힌트 강조에 함께 사용.
+- **예비 색(§2.1)**: `--sage #c9e4dc` · `--sky-2 #b8d8e8` · `--moss #d4e0b0` · `--rose-dust #e8c4c4` · `--peri #c4cce8`. 8색 순환으로 부족하거나(활동 9개+), 형성평가·회고처럼 순환에서 빼고 싶은 카드에 골라 쓴다. 카드 바탕 틴트는 이 색을 흰색에 12~16% 섞은 값(예: `#f3faf7`, `#eef6fa`).
 
 ### 4.2 과목별 색 (시간표 재현용)
 

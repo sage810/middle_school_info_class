@@ -71,3 +71,39 @@ ACTIVITY_2 의 같은 4단계 "이해 체크"와 역할을 분리(여기=순서 
 
 ### 산출 spec 경로
 `spec/data4-4steps-sequencing.activity.md`
+
+---
+
+## 데이터 시각화 활동지 다듬기 (output/data5.html) — 2026-09-09
+
+data4_2 브랜치본 `data5.html`(데이터 시각화 · CODAP · 포켓몬)을 완성한 뒤,
+guide 7문서 기준으로 점검·보강한 세션 기록.
+
+### 추가/변경한 활동 요소
+- **형성평가 오답 해설**: DC `Component` 4지선다. 문항마다 정답 해설 `why` + **오답 보기별 해설 맵 `w`**
+  (`{'비교':…,'분포':…,'관계':…}` 등 정답 아닌 보기 전부). 피드백 조립
+  `right ? '⭕ ' + q.why : '❌ ' + (q.w && q.w[pick] ? q.w[pick] + ' ' : '') + '정답은 ' + q.a + ' 분석이에요.'`.
+  `pick`(고른 값, bare '구성'…)이 `w` 키와 동일 형식. → `activity guide.md §2-8` 로 규칙화.
+- **`4. [데이터 해석하기]`**: 각 미션 붙여넣기 칸과 `📝 그래프 해석` 사이에 `.proc-list` 단일 `<li>`
+  (`<span class="tag">` 재사용, `margin-top:8px`). "데이터 분석 과정" 1~3 항목과 같은 디자인.
+- **이상치(outlier) 개념 카드**(분포 분석): `callout--tip`(정의형 = 용어 카드와 동일 변형).
+- **핵심 개념 확인 표**: `key-list` → `type-scroll > table.type-table`(개념/뜻 2열, `td.k`),
+  이번 수업에서 새로 배운 `이상치(outlier)` 행 포함.
+- **관계 분석 재배치**: `📐 용어`(최소제곱선·r) + r값 표를 CODAP 그리기 단계에서 빼
+  `4. [데이터 해석하기]` 아래 · `📝 그래프 해석 — r 값…` 앞으로 이동.
+- **CODAP에 데이터 올리기 이미지**: `코답1~4` 를 앞에, 기존 `m1-drop`/`m1-resize` 를 ⑤⑥ 으로 이어 6장.
+- **활동 구분선**: `.m-divider` → `::before { content: "✨ ✨ ✨" }` (색·radius·서체 미추가, `letter-spacing:10px`).
+
+### 색 밸런스 (design.md §4.1 준수 확인)
+- 미션 헤더·배지 accent = §4.1 8색 순환 그대로: aqua→blue→yellow→purple→mint,
+  형성평가=lilac(#6), RECAP=salmon(#7). 카드 바탕 틴트도 §3.5 목록값(`#eef9f8`·`#f4f8fe`·`#fffaee`·`#f8f4fe`·`#f1fbf7`) 일치.
+- **수정**: 이상치 카드가 유일한 난색 `callout--ask #fff6e6` 이라 냉색 파스텔 사이에서 튐 →
+  `callout--tip`(#f3eefe) 으로 변경. 이후 콜아웃은 전부 냉색(`--reason` mint / `--tip` lilac / `--warn`).
+- 예비 파스텔 5색(`--sage`·`--sky-2`·`--moss`·`--rose-dust`·`--peri`)을 design.md §2.1·§4.1 에 등록.
+
+### 통합 주의
+- **외부 리소스 0** 확인(코드 내 `@import`/`url(` 은 html2canvas 라이브러리 JS 내부 문자열).
+- **진행률**: `sheetChecklist = [이름, fq[0], fq[1], fq[2]]` 4항목 그대로. 새 요소는 읽기 전용이라 미포함.
+- **PDF(savePdf)**: hide 목록 `.pz-controls` 유지로 충분(신규 요소는 인쇄돼야 정상).
+- 헤드리스 렌더는 이 환경에서 Edge 불가 → Chrome `--headless=new` `--dump-dom` 으로 하이드레이션 확인
+  (`데이터 시각화`×10, `형성평가`×3, MISSION_1~5, 미치환 `{{ }}` 0).
