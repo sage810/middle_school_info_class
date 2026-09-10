@@ -220,14 +220,252 @@
 
 ## 3. 아직 구현되어 있지 않지만 이 구조 위에 자연스럽게 추가할 수 있는 활동 유형 아이디어
 
-아래는 기존 컴포넌트(위 1장)를 최대한 재사용하면서 만들 수 있는, 아직 없는 활동 유형입니다. 순서는 구현 난이도가 낮은 것부터입니다.
+아래는 기존 컴포넌트(위 1장)를 최대한 재사용하면서 만들 수 있는, 아직 없는 활동 유형입니다.
+카테고리별로 묶었고, 각 항목에 간단한 예시를 붙였습니다. 실제로 만들 때는 4장 체크리스트를 따릅니다.
 
-- **순서 배열(시퀀싱) 드래그**: 1-4 짝짓기 컴포넌트를 응용 — 슬롯을 "①/②/③/④" 순서 칸으로 만들고, 칩에 뒤섞인 단계 설명(또는 이미지)을 담아 올바른 순서로 놓게 합니다. 채점 로직(`data-answer`)을 그대로 재사용할 수 있습니다.
-- **분류하기(카테고리 나누기)**: 역시 1-4를 응용 — 트레이 하나에 여러 항목 칩을 두고, 슬롯 대신 "구체적인 질문" / "모호한 질문"처럼 카테고리 상자를 2~3개 만들어 각 상자에 여러 칩을 놓을 수 있게 합니다(현재 `placeChipInSlot`은 칸 하나에 칩 하나만 들어가도록 되어 있어, 카테고리당 여러 개를 담으려면 "칸이 여러 칩을 품을 수 있도록" 로직을 살짝 수정해야 합니다 — 완전 재사용은 아니고 부분 수정 필요).
-- **이미지 핫스팟 클릭**: 기존 base64 이미지(예: 프로그램 실행 화면) 위에 `position:absolute`인 투명 버튼(`.choice-card`와 유사한 클릭 판정 영역)을 좌표로 겹쳐 놓고, 1-2 객관식 채점 패턴을 그대로 재사용해 "여기를 클릭하세요"형 문제를 만들 수 있습니다.
-- **카드 뒤집기(짝맞추기 메모리 게임)**: 새 컴포넌트가 필요합니다. 카드 배열을 `<button class="flip-card" data-pair="A">`처럼 만들고 클릭 시 `.flipped` 토글, 두 장이 열렸을 때 `data-pair` 일치 여부 비교하는 새 JS가 필요합니다. 진행률/PDF 처리에 새로 편입시키려면 2장의 4번·3번 규칙에 따라 손봐야 합니다.
-- **슬라이더 평가/추정 활동**: `<input type="range">`를 하나 추가하고, 값에 따라 피드백 문구를 보여주는 정도로 간단히 만들 수 있습니다. 다만 `input.blank`가 아니므로 진행률·자동저장에 넣으려면 `worksheetInputs()`/`updateProgress()`가 range input도 인식하도록 조건을 추가해야 합니다.
-- **타이머 챌린지**: 기존 어떤 활동(빈칸/퀴즈/짝짓기) 위에 "제한 시간" 요소만 얹는 방식 — `setInterval`로 카운트다운 표시 후 시간 종료 시 입력을 막는 정도로, 별도 채점 시스템 없이 기존 활동을 감싸는 형태로 구현 가능합니다.
+### 3.1 텍스트/입력 기반
+
+**복수 정답 빈칸** — 여러 문자열 중 하나만 맞으면 정답 처리 (예: "사과"와 "apple" 둘 다 인정).
+```html
+<textarea class="blank blank--autogrow" data-accept="사과,apple,APPLE" aria-label="q1"></textarea>
+```
+채점 시 `data-accept`를 쉼표로 나눠 그 중 하나와 일치하는지 비교하도록 채점 함수만 살짝 손보면 됩니다.
+
+**순서 있는 빈칸(클로즈 테스트)** — 문장 하나에 빈칸 여러 개, 전부 채워야 그 문항이 완료된 것으로 침.
+```html
+<p class="fill-line">데이터 분석의 첫 단계는
+  <textarea class="blank blank--autogrow" aria-label="cloze1"></textarea> 이고,
+  두 번째는 <textarea class="blank blank--autogrow" aria-label="cloze2"></textarea> 입니다.</p>
+```
+기존 `.fill-line` + `textarea.blank` 패턴 그대로, 한 문장 안에 여러 개만 넣으면 됩니다.
+
+**자유 서술형 + 글자 수 표시** — 서술형 답 밑에 "지금 87자 작성" 같은 카운터.
+```html
+<textarea class="blank" aria-label="essay1" data-count-target="essay1-count"></textarea>
+<span id="essay1-count" class="char-count">0자</span>
+```
+`input` 이벤트에서 `el.value.length`를 세어 대상 span에 써주는 짧은 리스너 하나만 추가.
+
+### 3.2 선택/클릭 기반
+
+**복수선택 체크박스 퀴즈** — "해당하는 것 모두 고르세요"처럼 정답이 여럿인 문제.
+```html
+<div class="mc-quiz-item mc-quiz-item--multi">
+  <p>다음 중 개인정보인 것을 모두 고르세요.</p>
+  <div class="choice-card-row">
+    <button class="choice-card" data-item="p1" data-group="g1" data-correct="true">① 이름</button>
+    <button class="choice-card" data-item="p2" data-group="g1">② 좋아하는 색</button>
+    <button class="choice-card" data-item="p3" data-group="g1" data-correct="true">③ 전화번호</button>
+  </div>
+</div>
+```
+기존 `.mc-quiz-item`은 "한 개만 선택"이 전제라, `data-correct="true"`가 여러 개인 그룹에서는
+클릭할 때마다 선택을 토글(라디오 대신 체크박스처럼)하고 "확인" 버튼을 눌렀을 때 한꺼번에
+채점하는 로직이 새로 필요합니다.
+
+**이미지 핫스팟 클릭** — 캡처 이미지 위에 투명 버튼을 좌표로 겹쳐 "여기를 클릭하세요"형 문제.
+```html
+<div class="hotspot-wrap" style="position:relative">
+  <img src="data:image/png;base64,..." style="width:100%">
+  <button class="choice-card hotspot" data-item="save-icon" data-group="hs1" data-correct="true"
+          style="position:absolute; left:62%; top:18%; width:40px; height:40px; opacity:0"></button>
+</div>
+```
+1-2 객관식 채점 패턴을 그대로 재사용, 버튼만 이미지 위에 투명하게 겹쳐 놓습니다.
+
+**클릭해서 펼치기(아코디언/스포일러)** — 힌트·해설을 눌러야 보이게.
+```html
+<button class="reveal-toggle" data-target="hint1">💡 힌트 보기</button>
+<div id="hint1" class="reveal-body" hidden>이 활동에서는 표의 '행'과 '열'을 먼저 구분해보세요.</div>
+```
+클릭 시 `hidden` 속성만 토글하는 짧은 JS.
+
+**순차 클릭 스테퍼** — 카드 한 장씩 "다음" 버튼으로 넘기며 진행하는 설명형 활동.
+```html
+<div class="stepper" data-step="0">
+  <div class="stepper-panel">1단계: 문제 정하기 — ...</div>
+  <div class="stepper-panel" hidden>2단계: 데이터 모으기 — ...</div>
+  <button class="stepper-next">다음 →</button>
+</div>
+```
+
+**토글 스위치형 판단 문제** — OX 대신 스위치를 켜고 끄듯 판단하게 하는 시각적 변형.
+```html
+<label class="toggle-quiz" data-answer="true">
+  <input type="checkbox" class="toggle-input">
+  <span class="toggle-track"></span> 이 문장은 사실이다
+</label>
+```
+
+### 3.3 드래그 기반 (1-4 짝짓기 엔진 응용)
+
+**순서 배열(시퀀싱) 드래그** — 슬롯을 "①②③④" 순서 칸으로 만들고, 칩에 뒤섞인 단계를 담아 올바른
+순서로 놓게 합니다. `data4`의 "데이터 분석 4단계" 활동에서 이미 만들어 쓰신 방식입니다.
+```html
+<div class="dnd-tray" id="seqTray1">
+  <span class="dnd-chip" data-value="step3" data-answer-key="step3">데이터 분석하기</span>
+  <span class="dnd-chip" data-value="step1" data-answer-key="step1">문제 정하기</span>
+</div>
+<div class="dnd-slot" data-slot="seqSlot1" data-check-group="seqTray1" data-answer="step1"></div>
+```
+
+**분류하기(카테고리 나누기)** — 트레이 하나에 여러 항목 칩을 두고, 슬롯 대신 "구체적인 질문" /
+"모호한 질문" 같은 카테고리 상자 2~3개에 여러 칩을 나눠 담게 합니다.
+```html
+<div class="dnd-category" data-category="specific" data-check-group="catTray1"></div>
+<div class="dnd-category" data-category="vague" data-check-group="catTray1"></div>
+```
+현재 `placeChipInSlot`은 칸 하나에 칩 하나만 들어가도록 되어 있어, 카테고리당 여러 개를
+담으려면 "칸이 여러 칩을 품을 수 있도록" 로직을 살짝 수정해야 합니다(부분 수정 필요).
+
+**크기순/순위 정렬** — 숫자·데이터 카드를 드래그로 크고 작은 순서로 줄 세우기. 데이터 분석
+수업에서 "가장 판매량이 많은 순서로 배열해보세요" 같은 문제에 잘 맞습니다. 순서 배열
+드래그와 구조가 같고, 칩 문구만 숫자/데이터로 바뀝니다.
+
+**타임라인에 배치하기** — 가로 시간축 위에 사건 카드를 드래그로 놓기.
+```html
+<div class="timeline-track" data-check-group="tlTray1">
+  <div class="timeline-slot" data-slot="tl1" data-answer="event-a"></div>
+  <div class="timeline-slot" data-slot="tl2" data-answer="event-b"></div>
+</div>
+```
+가로 배치 CSS만 다르고 채점 로직은 순서 배열 드래그와 동일합니다.
+
+**이미지 라벨링** — 다이어그램 이미지 위에 이름표를 드래그로 붙여 부품 이름 맞추기.
+```html
+<div style="position:relative">
+  <img src="data:image/png;base64,..." style="width:100%">
+  <div class="dnd-slot dnd-slot--overlay" data-slot="lbl1" data-answer="cpu"
+       style="position:absolute; left:40%; top:30%"></div>
+</div>
+```
+
+**블록 조립(엔트리 스타일)** — 엔트리 블록처럼 생긴 조각을 순서대로 드래그해 "코드"를
+완성합니다. 엔트리·순서도 수업에 특화된 아이디어입니다.
+```html
+<div class="dnd-tray" id="blockTray1">
+  <span class="dnd-chip dnd-chip--block" data-value="b1" data-answer-key="move">10만큼 움직이기</span>
+  <span class="dnd-chip dnd-chip--block" data-value="b2" data-answer-key="wait">1초 기다리기</span>
+</div>
+<div class="block-stack" data-check-group="blockTray1">
+  <div class="dnd-slot" data-slot="bs1" data-answer="move"></div>
+  <div class="dnd-slot" data-slot="bs2" data-answer="wait"></div>
+</div>
+```
+구조는 순서 배열 드래그와 같고, 칩 모양을 엔트리 블록처럼 CSS로 꾸미면 됩니다. 새 엔진은
+필요 없고 스타일만 새로 필요합니다.
+
+### 3.4 캔버스/그리기 기반 (이미 쓰시는 캔버스 드로잉 응용)
+
+**이미지 위에 형광펜 표시** — 캡처 이미지에서 중요한 부분을 색칠하듯 표시.
+```html
+<canvas class="mark-canvas" data-bg="data:image/png;base64,..." width="600" height="400"></canvas>
+```
+기존 캔버스 드로잉 컴포넌트와 동일한 구조, 배경 이미지 위에 반투명 색으로 그리게 하면 됩니다.
+
+**SVG 영역 클릭 색칠** — 지도나 다이어그램의 특정 영역을 클릭하면 색이 채워짐. 데이터 시각화
+강조나 순서도 단계 강조에 씁니다.
+```html
+<svg viewBox="0 0 400 300">
+  <path class="region" data-region="step1" onclick="toggleFill(this)" d="M10 10 L100 10 L100 100 Z"/>
+</svg>
+```
+
+**좌표에 점 찍기** — 빈 좌표평면(캔버스)을 클릭해서 산점도 데이터 점을 직접 찍어보기. 데이터
+분석 수업에 좋습니다.
+```html
+<canvas class="scatter-canvas" width="500" height="400" data-axis-x="0,10" data-axis-y="0,10"></canvas>
+```
+클릭 좌표를 축 값으로 환산해 점을 찍고 `state`에 좌표 배열로 저장.
+
+**5×5 격자 클릭 토글(마이크로비트 LED 패턴)** — 칸을 클릭하면 켜짐/꺼짐 전환. 마이크로비트
+LED 매트릭스 패턴 학습에 딱 맞고 구현도 쉽습니다.
+```html
+<div class="led-grid" data-size="5" data-answer="0,4,8,12,16">
+  <!-- 5x5 = 25개 버튼을 JS로 자동 생성, 클릭 시 .lit 토글 -->
+</div>
+```
+
+### 3.5 미디어 기반
+
+**좌우 비교 슬라이더(before/after)** — 가운데 막대를 드래그하면 왼쪽/오른쪽 이미지가 겹쳐
+보임. 원본 사진 vs AI 생성 이미지 비교(디지털윤리·AI기초)에 잘 맞습니다.
+```html
+<div class="compare-slider">
+  <img class="compare-before" src="data:image/png;base64,...">
+  <img class="compare-after" src="data:image/png;base64,...">
+  <input type="range" class="compare-handle" min="0" max="100" value="50">
+</div>
+```
+`input` 값에 따라 after 이미지의 `clip-path` 폭을 조절.
+
+**카드 뒤집기(짝맞추기 메모리 게임)** — 카드 배열을 클릭해 뒤집고, 두 장이 열렸을 때 짝이
+맞는지 비교.
+```html
+<button class="flip-card" data-pair="A"><span class="card-back">?</span><span class="card-front">개념 A</span></button>
+<button class="flip-card" data-pair="A"><span class="card-back">?</span><span class="card-front">뜻 A</span></button>
+```
+클릭 시 `.flipped` 토글, 두 장 열렸을 때 `data-pair` 일치 여부 비교하는 새 JS 필요.
+
+### 3.6 게임/타이머 요소
+
+**타이머 챌린지** — 기존 활동(빈칸/퀴즈/짝짓기) 위에 "제한 시간" 요소만 얹기.
+```html
+<div class="timed-activity" data-seconds="60">
+  <span class="timer-display">01:00</span>
+  <!-- 안에 기존 활동 마크업 그대로 -->
+</div>
+```
+`setInterval`로 카운트다운 표시 후 시간 종료 시 입력을 막는 정도, 별도 채점 시스템 불필요.
+
+**단계 잠금 해제(언락형 진행)** — 이전 섹션을 다 풀어야 다음 섹션이 열림.
+```html
+<div class="section-block locked" data-unlock-after="mission-1">...</div>
+```
+`updateProgress()`가 이전 섹션 완료를 감지하면 `.locked` 클래스를 제거.
+
+**슬라이더 평가/추정** — 값을 조절하면 피드백 문구가 바뀜.
+```html
+<input type="range" class="estimate-slider" min="0" max="100" data-feedback-target="est1">
+<p id="est1" class="estimate-feedback"></p>
+```
+`input.blank`가 아니므로 진행률·자동저장에 넣으려면 `worksheetInputs()`/`updateProgress()`가
+range input도 인식하도록 조건을 추가해야 합니다.
+
+### 3.7 판단·시나리오형 (디지털윤리·AI기초 수업에 특히 유용)
+
+**분기형 시나리오** — 선택지를 고르면 그 결과에 따라 다른 다음 카드가 보임. 딜레마 토론 수업에
+강력합니다.
+```html
+<div class="branch-scenario" data-node="start">
+  <p>친구가 SNS에 내 사진을 허락 없이 올렸어요. 어떻게 할까요?</p>
+  <button class="branch-choice" data-goto="node-a">바로 항의한다</button>
+  <button class="branch-choice" data-goto="node-b">먼저 이유를 물어본다</button>
+</div>
+<div class="branch-scenario" data-node="node-a" hidden>...</div>
+```
+선택한 `data-goto` 값의 노드로 전환, 나머지는 숨김.
+
+**찬반 스펙트럼 슬라이더** — "매우 반대 — 매우 찬성" 축 위에 자기 생각 위치를 표시.
+```html
+<div class="spectrum">
+  <span>매우 반대</span>
+  <input type="range" class="spectrum-slider" min="-2" max="2" value="0">
+  <span>매우 찬성</span>
+</div>
+```
+
+**간단한 규칙기반 미니 판정기** — 학생이 몇 가지 값을 입력하면, 실제 AI API 호출 없이 미리
+정해둔 if-else 규칙으로 "AI라면 이렇게 판단했을 거예요" 결과를 즉석에서 보여줌. 서버 호출이
+없어 자체완결 원칙에도 맞고, "규칙 기반 vs 학습 기반" 개념 설명에도 쓸 수 있습니다.
+```html
+<select class="rule-input" data-key="weather">
+  <option value="rain">비</option><option value="sunny">맑음</option>
+</select>
+<button onclick="runRuleEngine()">AI라면?</button>
+<p class="rule-output"></p>
+```
+`runRuleEngine()`은 서버 호출 없이 로컬 if-else로 결과 문구를 조립해 `.rule-output`에 표시.
 
 ## 4. 새 활동 추가 시 체크리스트
 
