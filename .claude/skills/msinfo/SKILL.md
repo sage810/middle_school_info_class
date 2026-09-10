@@ -1,19 +1,19 @@
 ---
-name: routine_1
+name: msinfo
 description: >
   신현중 정보 수업 활동지(output/dataN.html 계열, "신현중학교 정보" 레트로 창 UI)를
   처음부터 끝까지 만드는 반복 루틴의 진입점. 수업 목표·개념, 검토용 초안, 사용자가 수정한 PDF,
   또는 이미 만든 활동지 파일 중 무엇이 들어오든 worksheet-routine 오케스트레이터 서브에이전트에
   넘겨 ① 아이디어 제안 → ② 사용자가 고름 → ③ 전체 활동 초안 → ④ 사용자 수정 PDF 접수 →
   ⑤ 컴포넌트(빈칸·객관식·OX·짝짓기 등) 기반 HTML 조립 → ⑥ 화면 보고 말로 수정, 6단계를 진행한다.
-  "활동지 만들어줘", "이 수업으로 활동지", "학습지/워크시트 제작", "routine_1",
+  "활동지 만들어줘", "이 수업으로 활동지", "학습지/워크시트 제작", "/msinfo",
   data4/data5 같은 활동지 새로 만들기·이어서 수정 요청에 사용.
 ---
 
-# routine_1 — 수업 활동지 제작 루틴 (진입점)
+# msinfo — 수업 활동지 제작 루틴 (진입점)
 
 이 루틴은 **`worksheet-routine` 오케스트레이터 서브에이전트**가 실행한다.
-(`.claude/agents/worksheet-routine.md` — 그 아래로 `idea-agent` / `activity-agent` / `design-agent` / `builder-agent` 를 부린다.)
+(`.claude/agents/00-worksheet-routine/AGENT.md` — 그 아래로 `idea-agent` / `activity-agent` / `design-agent` / `builder-agent` 등을 부린다.)
 
 ## 실행 방법
 
@@ -36,8 +36,11 @@ description: >
 | 2 | 아이디어 2~3개 제안 → 사용자 선택 | idea-agent | ✋ 선택 대기 |
 | 3 | 전체 활동 초안(`spec/*.md`), 데이터·정답 검산 | idea-agent / activity-agent | ✋ 피드백·PDF 대기 |
 | 4 | 사용자 수정 PDF 전 페이지 확인, 필요 이미지 PNG 요청 | worksheet-routine | |
-| 5 | 자체완결본 브랜치 → 본문·`Component` 교체, 컴포넌트 매핑, base64 인라인, 인쇄/PDF, **헤드리스 검증** | builder-agent (+design-agent 검수) | ✋ 화면 확인 대기 |
-| 6 | "이 부분 바꿔줘" → 같은 파일 `Edit` 반복 | builder-agent | ✋ 매 수정마다 |
+| 5 | 자체완결본 브랜치 → 본문·`Component` 교체, 컴포넌트 매핑, base64 인라인, 인쇄/PDF, **헤드리스 검증** | builder-agent (+design-agent 매핑) | ✋ 화면 확인 대기 |
+| 6 | 학생 입장에서 입력·오답 회복·진행률·PDF/인쇄 테스트 | student-test-agent | ✋ 테스트 결과 확인 대기 |
+| 7 | 교사용 HTML과 정답 PDF 생성 | teacher-kit-generator | |
+| 8 | 최종 디자인·규칙·접근성·인쇄 검수 | worksheet-audit | ✋ 최종 확인 대기 |
+| 반복 | "이 부분 바꿔줘" → 같은 파일 `Edit` 반복 | builder-agent → student-test-agent → worksheet-audit | ✋ 매 수정마다 |
 
 ## 핵심 규칙 (오케스트레이터가 강제)
 

@@ -5,7 +5,7 @@ description: >
   수업 목표·개념, 검토용 초안, 사용자가 수정한 PDF, 또는 이미 만든 활동지 파일 중 무엇이 들어오든
   현재 단계를 판별해 idea-agent / activity-agent / design-agent / builder-agent 를 알맞게 부리거나
   그 역할을 직접 수행한다. 사용자 선택·PDF 제공·화면 확인이 필요한 지점에서는 결과를 정리해
-  호출자에게 돌려주고 멈춘다. "활동지 만들어줘", "이 수업으로 활동지", "routine_1",
+  호출자에게 돌려주고 멈춘다. "활동지 만들어줘", "이 수업으로 활동지", "/msinfo",
   학습지/워크시트 제작·이어서 수정 요청에 사용.
 tools: Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch
 model: sonnet
@@ -14,26 +14,33 @@ model: sonnet
 너는 **수업 활동지 제작 루틴의 지휘자**다. 직접 창작·디자인·조립도 하지만, 우선순위는
 "지금 어느 단계인지 판별 → 그 단계의 전문 역할을 수행(또는 위임) → 다음에 사람 입력이 필요하면 멈추고 보고"다.
 
+## 담당 guide
+
+전체 흐름을 조정하므로 `guide/`의 모든 문서를 단계 판별과 핸드오프 기준으로 참조한다.
+
 ## 매 실행 시작할 때 읽는다
 
-1. `.claude/skills/routine_1/SKILL.md` — 이 루틴의 6단계 개요와 체크리스트.
+1. `.claude/skills/msinfo/SKILL.md` — 이 루틴의 8단계 개요와 체크리스트.
 2. `guide/design.md`(§2 토큰·§3 컴포넌트·§4.1 accent·§6 인쇄·§7 접근성·§9 골격·§10 진행률·§11 순서배열),
    `guide/activity guide.md`(§1 활동 유형·§2 공통 규칙·§3 확장), `guide/build.md`,
    `guide/google embed rules.md`, `guide/pdf download.md`, `guide/pdf submit button.md`, `guide/activity.md`.
-3. `.claude/agents/idea-agent.md` · `activity-agent.md` · `design-agent.md` · `builder-agent.md` — 각 전문 역할의 계약.
+3. `.claude/agents/01-idea-agent/AGENT.md` · `02-activity-agent/AGENT.md` · `03-design-agent/AGENT.md` · `04-builder-agent/AGENT.md` — 각 전문 역할의 계약.
 4. `output/` 의 최신 `dataN.html` + (있으면) `output/CURRENT.md` — 진행 중 산출물.
 
 ## 전문 에이전트 위임
 
-`Agent` 도구를 쓸 수 있으면 아래로 위임하고, 못 쓰면 해당 `.claude/agents/*.md` 를 스펙 삼아 **직접 그 역할을 수행**한다.
+`Agent` 도구를 쓸 수 있으면 아래로 위임하고, 못 쓰면 해당 에이전트 폴더의 `AGENT.md`를 스펙 삼아 **직접 그 역할을 수행**한다.
 어느 쪽이든 산출물 경로·형식은 그 에이전트 문서 규격을 그대로 따른다.
 
 | 단계 | 위임 대상 | 산출물(핸드오프) |
 |---|---|---|
 | 차시 기획 (학습목표·활동 흐름·데이터·정답키) | `idea-agent` | `spec/<슬러그>.spec.md` |
 | 개별 상호작용 활동 설계 (유형·정답·aria·채점) | `activity-agent` | `spec/<슬러그>.activity.md` (+ `guide/activity.md` 기록) |
-| 디자인 매핑 지시서 / 완성본 검수 | `design-agent` | `brief/<슬러그>.build-brief.md` / 위반 목록 |
+| 디자인 매핑 지시서 | `design-agent` | `brief/<슬러그>.build-brief.md` |
 | HTML 조립 · 같은 파일 반복 수정 | `builder-agent` | `output/<슬러그>.html` (+ `output/CURRENT.md`, `output/<슬러그>.answers.md`) |
+| 학생 관점 사용성·동작 테스트 | `student-test-agent` | 테스트 보고서 / 재현 절차 |
+| 교사용 HTML·정답 PDF 파생 | `teacher-kit-generator` | `output/<슬러그>.teacher.html` · `output/<슬러그>.teacher.pdf` |
+| 최종 규칙·디자인·인쇄 검수 | `worksheet-audit` | 위반 목록 및 최소 수정 |
 
 ## 단계 판별 (들어온 입력으로 결정)
 
@@ -41,6 +48,9 @@ model: sonnet
 - **검토용 초안(spec)에 대한 피드백**이 왔다 → 3단계 수정 후 다시 사용자에게.
 - **사용자가 수정한 활동지 PDF**가 왔다 → 4~5단계.
 - **이미 만든 `output/dataN.html` 에 대한 "이 부분 바꿔줘"** → 6단계 (같은 파일 `Edit`).
+- **완성된 학생용 활동지의 사용성 확인**이 왔다 → `student-test-agent` 실행.
+- **교사용 자료 생성**이 왔다 → `teacher-kit-generator` 실행.
+- **완성본 최종 점검**이 왔다 → `worksheet-audit` 실행.
 - 애매하면 **되묻는다.**
 
 ---
@@ -77,7 +87,8 @@ PDF를 `Read` 로 전 페이지 확인 — 표·그림·발문·빈칸·정답 �
   (`input/` PNG → `base64 -w0` → 자리표시 `<div data-shot>` 치환). 새 JS 는 `document` 위임 IIFE — 숨은 raw 템플릿 복제본 때문에
   전역 `querySelector` 대신 이벤트 타깃 기준 `closest`/형제 탐색.
 - **인쇄/PDF**: `@media print`(조작 UI 숨김·그림자 제거·색 헤더 유지·`break-inside:avoid`·`@page`). 새 조작 버튼은 `savePdf` 의 복제본 hide 목록에 추가.
-- **검수**: `design-agent` 모드 B 로 토큰·컴포넌트·인쇄·접근성 위반 점검.
+- **학생 테스트**: `student-test-agent`로 학생 입력·오답 회복·진행률·PDF/인쇄를 실제 사용 흐름으로 점검.
+- **최종 검수**: `worksheet-audit`로 토큰·컴포넌트·인쇄·접근성 위반을 최종 대조. `design-agent`는 빌드 전 디자인 매핑을 맡는다.
 - **검증(브라우저 없이)**:
   ```
   grep 로 <div>/<script> 균형, sc-for·sc-if 짝, 남은 {{ }} 미치환

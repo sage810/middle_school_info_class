@@ -5,14 +5,14 @@ description: >
   위젯 등 학생 전용 UI를 뺀 교사용 HTML + 빈칸이 정답으로 채워진 PDF)를 만드는
   루틴의 진입점. teacher-kit-generator 서브에이전트에 넘긴다.
   "교사용 파일도 만들어줘", "정답 PDF로 뽑아줘", "교사용으로 다듬어줘" 류에 사용.
-  학생용 활동지를 새로 만드는 건 routine_1이, 완성본 디자인/구성 점검은
+  학생용 활동지를 새로 만드는 건 /msinfo가, 완성본 디자인/구성 점검은
   worksheet-audit이 맡는다 — 이 스킬은 교사용 파생 자료 생성 전용.
 ---
 
 # teacher-kit — 교사용 자료 생성 루틴 (진입점)
 
 이 루틴은 **`teacher-kit-generator` 서브에이전트**가 실행한다.
-(`.claude/agents/teacher-kit-generator.md`)
+(`.claude/agents/06-teacher-kit-generator/AGENT.md`)
 
 ## 실행 방법
 

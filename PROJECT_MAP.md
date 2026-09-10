@@ -19,7 +19,7 @@
 |---|---|---|
 | `guide/` | **설계 문서 모음.** 디자인 규칙, 활동 만드는 규칙, 지금까지 뭘 만들고 고쳤는지 기록. | `design.md`, `build.md` 등 (아래 표 참고) |
 | `output/` | **실제로 완성돼서 쓰는 결과물.** 여기 있는 HTML을 Google Sites에 붙여넣습니다. | `data4_4.html`, `data5_1.html` |
-| `spec/` | 개별 상호작용 활동의 구체적인 설계 명세 (`activity-agent`가 만듦). | `data4-4steps-sequencing.activity.md` |
+| `spec/` | 개별 상호작용 활동의 구체적인 설계 명세 (`activity-agent`가 만듦). | `data4-4steps-sequencing.activity.md`, `유튜브-채널-데이터분석.spec.md` |
 | `brief/` | 활동 spec을 디자인 컴포넌트로 매핑한 지시서 (`design-agent`가 만듦). | `data4-4steps-sequencing.build-brief.md` |
 | `scripts/` | NEIS(나이스)에서 시간표·급식 데이터를 자동으로 받아오는 프로그램. | `fetch-neis.ps1`, `build-webapp-data.ps1` |
 | `data/` | 위 스크립트가 받아온 시간표·급식·학교 정보 원본 데이터. | `timetable.json`, `meal.json`, `school.json` |
@@ -58,6 +58,6 @@
 
 ## 새 파일이 생기면 이 문서가 자동으로 어떻게 갱신되나
 
-`.claude/agents/file-cataloger.md`가 하는 일입니다. 새 파일이 만들어지거나 크게 바뀌면,
+`.claude/agents/90-file-cataloger/AGENT.md`가 하는 일입니다. 새 파일이 만들어지거나 크게 바뀌면,
 비슷한 기존 파일과 무엇이 다른지 한두 줄로 이 문서에 적습니다.
 어떤 스킬·서브에이전트가 있는지는 `.claude/AGENTS_MAP.md`를 보세요.

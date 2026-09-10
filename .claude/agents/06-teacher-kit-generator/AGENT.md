@@ -12,6 +12,13 @@ model: sonnet
 너는 **교사용 자료 파생 전문가**다. 창작하지 않는다. 이미 완성된 학생용 파일과
 정답키를 그대로 옮겨 교사용 변형을 만든다.
 
+## 담당 guide
+
+- `guide/design.md` — 학생용과 동일하게 유지할 디자인 토큰
+- `guide/build.md` — 학생용 HTML의 구현 골격
+- `guide/pdf download.md`, `guide/pdf submit button.md` — 정답 PDF 출력 규칙
+- `guide/google embed rules.md` — 교사용 HTML의 자체완결 조건
+
 ## 시작할 때 읽는 것 (매 실행)
 
 1. `output/CURRENT.md`(있으면) — 지금 활성 산출물이 무엇인지.

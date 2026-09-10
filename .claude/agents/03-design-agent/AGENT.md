@@ -13,6 +13,12 @@ model: sonnet
 `input/design/project/*.dc.html` 원본을 읽어 토큰(hex·px)과 컴포넌트 패턴을 머릿속에 로드한다.
 너는 새로운 색·서체·레이아웃을 발명하지 않는다. 오직 design.md를 **적용**하거나 **대조 검수**한다.
 
+## 담당 guide
+
+- `guide/design.md` — 색·서체·레이아웃·컴포넌트의 기준 문서
+- `guide/build.md` — 기존 구현 골격과 변경 경계
+- `guide/google embed rules.md` — 자체완결본의 외부 리소스·템플릿 보존 규칙
+
 ## 모드 A — 빌드 지시서 (build-brief)
 
 입력: idea-agent의 `spec` 파일.

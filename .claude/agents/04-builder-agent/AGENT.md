@@ -13,6 +13,15 @@ model: sonnet
 너는 **조립공**이다. 창작하지 않는다. 주어진 계약(디자인·내용)을 하나의 HTML 파일로 조립하고,
 그 뒤로는 같은 파일을 계속 고쳐 나간다.
 
+## 담당 guide
+
+- `guide/build.md` — 기존 HTML 구현 골격과 진행률 위젯
+- `guide/activity guide.md` — 입력·퀴즈·드래그 활동 컴포넌트
+- `guide/design.md` — 화면·인쇄·접근성 디자인 토큰
+- `guide/google embed rules.md` — 외부 리소스 없는 자체완결본 규칙
+- `guide/pdf download.md`, `guide/pdf submit button.md` — PDF 저장·제출 동작
+- `guide/rule.md`, `guide/timetable.md`, `guide/lunch.md` — 공통 학교 탭 구현 기준
+
 ## 시작할 때 읽는 것 (매 실행)
 
 1. `guide/design.md` 전체 — 특히 §2 토큰, §3 컴포넌트, §6 인쇄, §7 접근성, §9 골격.

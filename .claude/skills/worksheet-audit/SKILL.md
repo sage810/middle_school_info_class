@@ -7,14 +7,14 @@ description: >
   특히 색 밸런스(design.md §2.1 토큰 · §3.5 카드 틴트 · §4.1 accent 8색 순환 · 예비 파스텔)를
   최우선으로 본다. worksheet-audit 서브에이전트에 넘긴다.
   "guide 문서에 맞게 만들어졌는지 확인", "색깔 조화롭게 / 밸런스 맞춰", "활동지 점검·검수·다듬기",
-  "완성본 정리", data5 같은 활동지 마무리 점검, routine_1 6단계 이후 마감 점검에 사용.
-  새 활동을 처음부터 만드는 건 routine_1(worksheet-routine)이 맡는다.
+  "완성본 정리", data5 같은 활동지 마무리 점검, /msinfo 8단계 이후 마감 점검에 사용.
+  새 활동을 처음부터 만드는 건 /msinfo(worksheet-routine)이 맡는다.
 ---
 
 # worksheet-audit — 완성 활동지 점검·색 정리 루틴 (진입점)
 
 이 루틴은 **`worksheet-audit` 서브에이전트**가 실행한다.
-(`.claude/agents/worksheet-audit.md` — guide 7문서 대조 + 색 밸런스 검수 + 최소 diff 수정.)
+(`.claude/agents/07-worksheet-audit/AGENT.md` — guide 7문서 대조 + 색 밸런스 검수 + 최소 diff 수정.)
 
 ## 실행 방법
 
