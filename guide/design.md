@@ -340,6 +340,47 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 
 `display:flex; align-items:center; justify-content:center; gap:8px`. 텍스트 `Maplestory` 300 / 14px / `--footer`.
 
+### 3.15 스크린샷 / 단계 이미지 그리드 (`.shot-grid` · `.shot-ph`)
+
+CODAP 조작법처럼 **여러 장의 캡처 이미지**를 나열하는 영역. 각 이미지는 `.shot-ph`(캡처 자리)
+안에 넣고, 여러 개면 `.shot-grid`(자동 채움) 또는 `.shot-grid--2x2`(2열 고정)로 묶는다.
+
+```css
+.shot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.shot-grid--2x2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.shot-ph{                                  /* 이미지 없을 때 = 빈 캡처 자리 */
+  min-height:118px;border:3px dashed #b3a8cc;border-radius:10px;
+  background:repeating-linear-gradient(45deg,#fbf8ff,#fbf8ff 10px,#f1ecfb 10px,#f1ecfb 20px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  text-align:center;padding:14px;color:#7d6ea8;font-size:13px;line-height:1.6}
+.shot-ph:has(img){border-style:solid;border-color:var(--ink);background:#fff}  /* 이미지 있으면 실선+흰 배경 */
+.shot-ph img{max-width:100%;border-radius:6px;border:1px solid #e3dcf2}
+.shot-ph .cap{font-size:12px;color:#7d6ea8;line-height:1.5}   /* 캡션은 이미지 아래 */
+```
+
+```html
+<div class="shot-grid shot-grid--2x2">
+  <div class="shot-ph" data-shot="m3-a"><img src="data:image/png;base64,…" alt=""><span class="cap">④ y축을 클릭</span></div>
+  …4칸…
+</div>
+```
+
+**★ 한 그리드에 이미지가 2장 이상이면 반드시 하나의 규격으로 정규화한다** (제각각 비율·크기·포맷이면
+칸 높이가 들쭉날쭉해 그리드가 깨진다):
+
+- **캔버스**: 모두 동일한 **흰색 정사각형**(기본 `600×600`, `#ffffff`).
+- **배치**: 원본 스크린샷을 **비율 유지(contain)**해 캔버스 안전영역(가장자리 20px 여백, 즉 `560×560`)에
+  맞추고 **가운데 정렬**. 안전영역보다 크면 축소, 작으면 **최대 1.6배까지만** 확대(그 이상은 뭉개짐).
+  스크린샷 **픽셀 내용·주석은 절대 자르거나 편집하지 않는다**.
+- **포맷**: 전부 **PNG** 로 통일(원본이 JPEG여도 재인코딩).
+- **래퍼**: `.shot-ph` 에 `max-width`·`margin` 같은 **개별 인라인 스타일을 넣지 않는다** — 4칸이 똑같이
+  셀 폭을 채우도록. (`data-shot` 식별자만 유지.)
+- 캡션(`.cap`)은 이미지 안에 굽지 말고 `<span class="cap">` 로 분리.
+
+정규화 레시피(PowerShell + `System.Drawing`, 헤드리스 검증까지):
+`guide/build.md` §「스크린샷 그리드 정규화」 참고. 처리 후 헤드리스로 해당 그리드를 캡처해 4칸이
+동일 크기·정렬인지 육안 확인한다. (2026-09 `data5_2.html` MISSION 3 비교 분석 그리드에 최초 적용.)
+
 ---
 
 ## 4. 색상 배정 규칙
@@ -380,6 +421,52 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 ### 4.3 알레르기 번호 색 (급식 재현용)
 
 `1 난류 #ff4d6d` · `2 우유 #ff7a1a` · `3 메밀 #ffb800` · `4 땅콩 #e8d000` · `5 대두 #9ed900` · `6 밀 #2fc744` · `7 고등어 #00c9a7` · `8 게 #00bcd4` · `9 새우 #0091ff` · `10 돼지고기 #3d5afe` · `11 복숭아 #7c4dff` · `12 토마토 #b429ff` · `13 아황산류 #e040fb` · `14 호두 #ff2d95` · `15 닭고기 #ff5252` · `16 소고기 #c1440e` · `17 오징어 #00867d` · `18 조개류 #5d6dff` · `19 잣 #8d6e00` (글자 흰색, `border-radius:6px; padding:2px 7px`).
+
+### 4.4 분석 유형별 색 (데이터 분석·시각화 활동지 표)
+
+데이터 분석 활동지의 **"데이터 시각화의 4가지 유형" 표 · "핵심 개념 확인" 표**(§3.11 `.type-table` 스타일)처럼
+분석 유형(구성 / 비교 / 분포 / 관계)이 행으로 나열되는 표에서, 각 유형을 **라벨 잉크색 + 셀 배경 옅은 틴트**
+한 쌍으로 구분한다. 라벨색은 원래 `.type-table td.k` 에서 유형 이름 텍스트에 쓰던 값이고, 틴트는 §3.5
+"accent의 아주 옅은 틴트"(`#eef9f8`, `#f4f8fe`, `#f8f4fe`, `#f1fbf7` …) 관례를 그대로 확장해 정했다 —
+새 팔레트 색이 아니라 각 계열 파스텔을 흰색 쪽으로 더 민 값이다.
+
+| 유형 | 라벨 잉크색 (텍스트) | 셀 배경 틴트 | 계열 |
+|---|---|---|---|
+| 구성 분석 | `#c96a97` (`--link`) | `#fdeef4` | pink |
+| 비교 분석 | `#4f6a96` | `#eef4fc` | blue |
+| 분포 분석 | `#6b559b` | `#f3eefc` | purple |
+| 관계 분석 | `#3d7f6c` | `#ecf7f1` | green |
+| 데이터 시각화 | `#3d7f6c` | `#ecf7f1` | green (아래 주 참고) |
+
+**적용 규칙**
+
+- **유형 이름 셀**(`td.k`): 텍스트에 라벨 잉크색(`style="color:…"`), 배경은 기존 `#faf7ff`(≈`--paper-pink`) 유지.
+- **같은 행의 부가 정보 셀**(질문 예시 문형 · 그래프 아이콘 · 뜻 등): 배경에 그 유형의 **틴트**를 준다. 행 안에서 유형을 색으로 이어 읽히게 하는 것이 목적.
+- **학생이 채우는 빈칸 셀**(「의미」처럼 `textarea.blank` 가 들어가는 칸)에는 틴트를 넣지 않는다 — 입력칸 배경(`--paper-pink`, §3.8)이 우선.
+- **데이터 시각화**는 관계 분석과 같은 green 을 재사용한다(핵심 개념 표에 관계 분석 행이 없을 때가 많음). 한 표에 **관계 분석 행이 함께 있으면** 데이터 시각화 틴트를 aqua 계열 `#e9f6f4` 로 바꿔 구분한다.
+- §4.1 활동 카드 accent 순환과는 **별개**다. 이건 "분석 유형"이라는 의미 축의 색이고, accent 순환은 카드 순서 축이다.
+
+**스니펫** (CSS 변수 쓰는 파일용. `output/data5_*.html` 은 변수 미사용이라 위 표의 리터럴 hex 를 인라인한다.)
+
+```css
+/* design.md §4.4 — 분석 유형별 색 */
+.ty-compose    { --ty-ink:#c96a97; --ty-tint:#fdeef4; }
+.ty-compare    { --ty-ink:#4f6a96; --ty-tint:#eef4fc; }
+.ty-distribute { --ty-ink:#6b559b; --ty-tint:#f3eefc; }
+.ty-relate     { --ty-ink:#3d7f6c; --ty-tint:#ecf7f1; }
+.ty-visualize  { --ty-ink:#3d7f6c; --ty-tint:#ecf7f1; }   /* 관계 분석과 동시 등장 시 --ty-tint:#e9f6f4 */
+
+.type-table td.k        { color: var(--ty-ink); }          /* 유형 이름 */
+.type-table tr > td:not(.k):not(:has(textarea.blank)) {
+  background: var(--ty-tint);                               /* 부가 정보 셀 */
+}
+```
+
+**인쇄(§6)**: 틴트는 유형 구분이라는 정보 위계이므로 인쇄에서도 유지한다(색 헤더 유지 원칙과 동일). 하드 섀도우만 제거.
+
+**접근성(§7)**: 색만으로 구분하지 않는다 — 유형 이름 텍스트가 항상 셀에 함께 있다. 틴트는 `--ink #4b3b6b` 대비에 영향을 주지 않을 만큼 옅다(모두 명도 96% 이상).
+
+**현재 사용처**: `output/data5_1.html`(M1 "4가지 유형" 표의 질문 예시 문형 열) · `output/data5_2.html`(M1 표 + "핵심 개념 확인" 표의 그래프·뜻 열).
 
 ---
 
@@ -506,6 +593,8 @@ textarea.field{min-height:88px;resize:vertical;padding:13px;border-radius:10px;
 **적용 범위**: `학교 웹앱` 의 **수업 활동지 탭**(`state.tab==='sheet'`, `isSheet`)에서만 렌더한다. 다른 탭·다른 문서에는 쓰지 않는다.
 
 **목적**: 가운데 정렬된 본문(`max-width:1080px; margin:0 auto`) **바깥, 화면 왼쪽 여백**에 "활동 진행률" 카드를 띄우고, 스크롤해도 뷰포트에 고정되어 같은 자리에 보이게 한다. (2026-09-03: 오른쪽 → **왼쪽**으로 이동, 폭 축소 — 아래 10.1.) 진행률 원천은 활동지 입력 완료 항목 수(예: 이름칸 1 + 활동1 서술답 1 + 4단계 체크 4 + 소감칸 1 = 총 7) 대비 완료 수의 퍼센트. 실제 계산·바인딩은 builder 담당이고, 이 절은 **시각·토큰·구조만** 규정한다.
+
+> **항목 집계 방식은 두 가지** — (a) 위 예시처럼 고정 체크리스트, (b) **DOM 항목 수 세분화**: 미션 빈칸(`textarea.blank`) + 붙여넣기 칸(`.paste-zone`) + 형성평가 문항을 각각 1항목으로 세어 `n / 총항목수`. (b)는 비제어 DOM 입력을 감시해 재렌더해야 하므로 구현 방법은 `guide/build.md` "항목 단위 세분화 진행률" 절 참고. 어느 쪽이든 이 절의 시각 규정(수치는 트랙 밖 표기 등)은 동일하게 적용한다.
 
 이 위젯은 §3 의 기존 컴포넌트만으로는 표현되지 않는 **진행 바**를 포함한다. 진행 바는 §2.1 팔레트·§2.2 서체·§2.4 스케일 안에서만 구성했고 새 색·radius·서체를 만들지 않았다(아래 10.4 참고). 카드 껍데기·헤더 스트립·픽셀 라벨은 §3.5 활동 카드 / §3.3 픽셀 태그 패턴을 그대로 재사용한다.
 
