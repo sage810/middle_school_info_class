@@ -161,6 +161,46 @@ btn.style.opacity = '0.6';
    - 복제본과 그 하위 요소들의 `id` 속성을 전부 제거(중복 id로 인해 원본 드래그&드롭
      엔진이 복제본을 잘못 조작하는 것을 방지).
 
+### 4.3.1 늘어난 빈칸 클리핑 방지 — 여러 줄 답안이 PDF에서 잘리는 문제 (data5_1.html, 2026-09-10)
+
+**증상**: 학생이 긴 답을 적어 `textarea.blank`가 2줄 이상으로 늘어난 상태에서 "PDF로 저장하기"를
+누르면, PDF 안 해당 칸의 **아랫줄 텍스트가 테두리 밖으로 잘려 안 보인다**. 특히 표 셀(`<td>`) 안
+빈칸(예: 데이터 시각화 4유형 표의 "의미" 칸)에서 재현된다.
+
+**원인**: §4.3에서 `textarea.blank` → `<div>` 치환 시 그 `<div>`에는 `white-space:pre-wrap`만 있고
+높이는 `min-height`뿐이라 브라우저에서는 콘텐츠에 맞게 자동으로 늘어난다. 그런데
+**html2canvas 1.4.1**은 표 셀 등 안에서 여러 줄로 자란 블록 요소의 높이를 "자연 높이"(줄바꿈 전
+높이)로 잘못 계산해, 넘치는 줄을 그리지 않고 잘라 버린다.
+
+**해결**: 복제본(`clone`)을 `document.body`에 append한 **뒤**(레이아웃이 실제로 잡힌 시점),
+치환해 만든 모든 빈칸 `<div>`의 실제 콘텐츠 높이(`scrollHeight`)를 재서 그 값을 인라인
+`height`로 **명시적으로 고정**한다. html2canvas는 auto 높이는 무시해도, 픽셀로 박힌 높이는
+그대로 그린다.
+
+```js
+// (§4.3 루프에서) 치환한 div 들을 배열에 모아 둔다
+const blankBoxes = [];
+...
+if (ta.parentNode) { ta.parentNode.replaceChild(box, ta); blankBoxes.push(box); }
+
+// holder 를 document.body 에 append 한 직후 — 레이아웃이 잡힌 뒤 높이 고정
+for (let i = 0; i < blankBoxes.length; i++) {
+  const b = blankBoxes[i];
+  b.style.height = 'auto';          // 먼저 auto 로 되돌려 정확히 측정
+  b.style.overflow = 'visible';
+  const h = b.scrollHeight;
+  if (h > 0) b.style.height = (h + 6) + 'px';   // +6 = border-box 보정 여유
+  const cell = b.closest ? b.closest('td, th') : null;
+  if (cell) cell.style.height = 'auto';         // 부모 셀도 자동 높이
+}
+```
+
+- **순서가 중요**: 이 루프는 반드시 `document.body.appendChild(holder)` **다음**에 와야 한다
+  (append 전에는 `scrollHeight`가 0). §4.3의 치환 루프(append 전)와는 분리된 두 번째 패스다.
+- `overflow:visible` + `height` 고정을 함께 걸어, 측정이 1~2px 모자라도 마지막 줄이 안 잘린다.
+- inline형(`blank--inline`)·블록형 빈칸 모두 같은 배열에 담아 처리한다.
+- 새 활동지 파일에 이 `savePdf`를 이식할 때 이 두 번째 패스도 함께 가져올 것.
+
 ### 4.4 캡처 → PDF 생성 → 다운로드
 ```js
 await (document.fonts?.ready ?? Promise.resolve())  // 최대 1.5초까지만 기다림
@@ -211,7 +251,10 @@ setTimeout(() => { window.print(); setTimeout(cleanup, 1000); }, 60);
 
 ## 5. 엣지 케이스: 이름 미입력 / 진행률 낮음 상태에서 버튼을 눌렀을 때
 
-**결론부터: 코드 전체(`savePdf`, `printFallback`)에 이름·진행률을 검사해서 저장을 막는
+> **버전 주의**: 아래 §5.1~§5.2 는 **`data4_1.html` 기준**(가드 없음). `data5_1.html`·`data5_2.html`
+> 은 §5.3 의 **제출 전 확인 가드**가 들어가 있어 동작이 다르다(이름 없거나 진행률 ≤70% 면 팝업 후 중단).
+
+**결론부터: (data4_1.html 은) 코드 전체(`savePdf`, `printFallback`)에 이름·진행률을 검사해서 저장을 막는
 로직(validation/guard)이 전혀 없다.** 두 경우 모두 **버튼은 정상적으로 동작하며 PDF 저장(또는
 인쇄)과 "제출" 처리가 그대로 진행된다.** 막지 않는 대신, 아래처럼 결과물/표시에 소소한 차이만 생긴다.
 
@@ -255,10 +298,54 @@ setTimeout(() => { window.print(); setTimeout(cleanup, 1000); }, 60);
   **정보성 표시일 뿐, 저장/제출을 제한하는 게이트가 아니다.** 진행률 0%든 100%든 버튼을 누르면
   동일하게 저장·제출 처리가 완료된다.
 
-> **요약**: 이 컴포넌트는 "필수 항목 완료 후 제출 가능"과 같은 서버/폼 검증 개념이 없는,
+> **요약**: (data4_1.html 은) "필수 항목 완료 후 제출 가능"과 같은 서버/폼 검증 개념이 없는,
 > **클라이언트 전용(로컬 다운로드) 활동지**다. 이름 미입력·낮은 진행률 모두 버튼 동작을
 > 막지 않으며, 유일한 차이는 (a) PDF 파일명에서 이름이 빠지는 것과 (b) PDF/인쇄물 안에
 > 빈 칸이 그대로 남는 것뿐이다.
+
+### 5.3 제출 전 확인 가드 — 이름 미입력 · 진행률 부족 (data5_1.html · data5_2.html, 2026-09-10)
+
+학생이 **이름을 안 적고** 또는 **활동지를 덜 채우고** "PDF로 저장하기"를 누르는 것을 막기 위해,
+`savePdf` **맨 앞**(라이브러리 체크·`printFallback` 분기보다 먼저)에 두 개의 가드를 넣는다. 조건에
+걸리면 `window.alert` 로 안내하고 `return` — PDF 생성도 인쇄 폴백도 안 하고, `saved` 도 안 바뀐다.
+
+```js
+savePdf: () => {
+  // ① 이름 미입력
+  if (!String(this.state.fName == null ? '' : this.state.fName).trim()) {
+    window.alert('이름을 적어주세요.');
+    const _nf = document.querySelector('#sheetPrintArea textarea[placeholder="이름을 적어요"]');
+    if (_nf) _nf.focus();                 // 이름칸으로 포커스 이동
+    return;
+  }
+  // ② 진행률 ≤ 70%  (임계값은 상수 하나만 바꾸면 됨)
+  const _pp = (typeof this._progressParts === 'function')
+    ? this._progressParts()               // data5_2: DOM 세분화 집계 (build.md "항목 단위 세분화 진행률")
+    : { done: sheetDone, total: sheetTotal };  // data5_1: renderVals 의 sheetChecklist 값
+  const _pct = _pp.total ? Math.round(_pp.done / _pp.total * 100) : 0;
+  if (_pct <= 70) {
+    window.alert('활동지를 모두 채워주세요.\n(현재 ' + _pct + '% 완료)');
+    return;
+  }
+  // …이하 기존 savePdf(파일명 → 라이브러리 체크 → 클론 캡처 → pdf.save) 그대로…
+}
+```
+
+**설계 포인트 / 재사용**
+
+- **위치**: `savePdf` 첫 줄. `printFallback` 경로(§4.6)도 이 뒤에서 갈리므로, 라이브러리 유무와 상관없이 가드가 먼저 걸린다.
+- **이름 판정**: `this.state.fName`(React state, 항상 최신). 캡처된 `s.fName` 대신 `this.state` 를 써야 클릭 시점 값이 정확하다.
+- **진행률 판정**: 클릭 시점에 **다시 계산**한다. `renderVals` 가 마지막으로 돈 뒤 학생이 더 입력했을 수 있으므로(특히 data5_2 는 비제어 DOM + 디바운스 갱신이라), 캡처된 `sheetPct` 를 믿지 말고 `this._progressParts()`(있으면) 로 재집계.
+  - `_progressParts` 가 없는 파일(data5_1 등)은 `renderVals` 스코프의 `sheetDone/sheetTotal` 로 폴백 — 이 값들이 `savePdf` 클로저에 잡혀 있다.
+- **임계값**: `<= 70` 의 `70` 만 바꾸면 기준 조정. "모두 채워야" 로 하려면 `_pct < 100`.
+- **문구**: `alert` 는 이 파일에서 이미 쓰는 패턴(§4.5 의 실패 안내). 팝업 대신 인라인 메시지를 원하면 `this.setState({ saveError: '…' })` 후 버튼 옆에 `<sc-if>` 로 표시하는 식으로 바꿀 수 있다(마크업 추가 필요).
+- **자동 채우기 테스트**: 헤드리스에서 `window.alert` 를 가로채 메시지를 배열에 모으고, `#pdfBtn` 클릭 후 배열을 확인. 두 조건 다 통과하면 그때부터 실제 html2canvas/jsPDF 가 돌아 느리므로, 가드만 검증할 땐 조건 통과 케이스를 클릭하지 말 것.
+
+**검증 (헤드리스, 2026-09-10)**
+
+- 이름 없이 `#pdfBtn` 클릭 → `alert("이름을 적어주세요.")`, 저장 안 됨.
+- 이름 입력 + 진행률 0% 로 클릭 → `alert("활동지를 모두 채워주세요.\n(현재 0% 완료)")`, 저장 안 됨.
+- 이름 + 진행률 70% 초과 → 가드 통과, 기존 PDF 생성 경로 진행.
 
 ---
 
@@ -298,8 +385,9 @@ setTimeout(() => { window.print(); setTimeout(cleanup, 1000); }, 60);
 | 파일명 규칙 | `"{학년}{반 2자리}{번호 2자리} {이름} 활동지.pdf"` (값이 없으면 해당 부분 생략) |
 | 캡처 대상 | `#sheetPrintArea` (원본이 아닌 화면 밖 복제본을 캡처, 원본 DOM은 무변경) |
 | textarea 처리 | 캡처 전, 답안 `textarea.blank`를 실제 입력값을 담은 `<div>`로 치환 (html2canvas 제약 회피) |
+| 늘어난 빈칸 클리핑 방지 | 복제본을 body에 append한 뒤, 치환한 빈칸 `<div>`의 `scrollHeight`를 재서 `height`로 고정 → 여러 줄 답안이 PDF에서 안 잘림 (§4.3.1, data5_1.html) |
 | 이미지 포맷 | JPEG 품질 0.9 (파일 용량 절감 목적, 주석 명시) |
 | 진행률과의 관계 | 진행률(%)과 "제출" 배지는 서로 다른 상태값이며 100% 미만이어도 제출 가능 |
-| **이름 미입력 시** | **막히지 않음.** PDF/인쇄는 정상 진행, 파일명에서 이름 세그먼트만 생략, PDF 안 이름 칸은 빈 채로 캡처됨 |
-| **진행률 낮을 때(0% 포함)** | **막히지 않음.** 임계치/경고 로직 없음. 미완성 상태 그대로 PDF 생성·제출 처리(`saved:true`) |
-| 검증(validation) 존재 여부 | 없음 — 이 컴포넌트는 클라이언트 전용 로컬 다운로드이며 필수 항목 강제 로직이 없음 |
+| **이름 미입력 시** | **data4_1**: 막히지 않음(파일명에서 이름만 생략). **data5_1/5_2(§5.3)**: `alert("이름을 적어주세요.")` 후 중단, 이름칸으로 포커스 |
+| **진행률 낮을 때(0% 포함)** | **data4_1**: 막히지 않음(임계치 로직 없음). **data5_1/5_2(§5.3)**: 진행률 ≤70% 면 `alert("활동지를 모두 채워주세요.")` 후 중단 |
+| 검증(validation) 존재 여부 | **data4_1**: 없음(클라이언트 전용). **data5_1/5_2**: `savePdf` 맨 앞 제출 전 가드 2개(이름·진행률) — §5.3 |
