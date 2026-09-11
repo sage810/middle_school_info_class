@@ -66,6 +66,39 @@
 - 정답 카드에만 `data-correct="true"`를 붙입니다. 보기가 여러 개여도 정답은 하나만 표시하세요 (현재 코드는 단일 정답 기준으로 채점).
 - `data-item` 값은 페이지 전체에서 유일해야 합니다 (자동저장의 선택 상태 키).
 
+#### 1-2-a. 오답별 맞춤 피드백 (오답 클릭 시 내용 관련 피드백) — data5_2.html 형성평가, 2026-09-10
+
+**문제**: 오답을 눌러도 "❌ 다시 생각해 봐요. 정답은 ○○예요." 처럼 **모든 오답에 똑같은 일반 문구**만 나오면,
+학생은 자기가 왜 틀렸는지, 자기가 고른 보기가 어떤 상황에 맞는 건지 알 수 없다.
+
+**해결**: 고른 오답 보기별로 **"그 보기는 언제 쓰는 것" + "이 문제는 실제로 무엇을 묻는지"**를 짚어 주는
+문구를 따로 준비해, 선택한 보기에 해당하는 문구를 피드백으로 보여준다. (정답을 그냥 알려 주는 대신
+판단 기준을 다시 세워 준다.)
+
+- **`.choice-card`(속성 기반) 방식**: 오답 카드마다 `data-feedback="..."` 속성을 달고, 채점 로직에서
+  `선택된카드.dataset.feedback` 을 `.mc-feedback` 에 넣는다. 정답 카드의 `data-feedback` 에는 "왜 정답인지"를 쓴다.
+  값이 없는 카드는 기존 일반 문구로 폴백.
+- **`fqItems`/`renderVals`(data5 계열 React dc-runtime) 방식**: 각 문항 객체에 오답 보기 → 문구 맵을 추가한다.
+  ```js
+  const FQ = [
+    {
+      t: '우리 반 친구들이 좋아하는 계절은 봄·여름·가을·겨울 각각 몇 %일까?', a: '구성',
+      why: "'몇 %'를 묻고 있으니 … 구성 분석이에요.",          // 정답 클릭 시
+      no: {                                                    // 오답 보기값 → 맞춤 문구
+        '비교': "'비교'는 서로 다른 두 그룹을 콕 집어 '어느 쪽이 더 큰지' 견줄 때 써요. 이 질문은 계절 4개가 전체에서 각각 몇 %인지 비율을 묻고 있어요."
+      }
+    }, …
+  ];
+  // 피드백 계산: 오답이면 no[pick] 을 앞에 붙이고, 없으면 일반 문구로 폴백
+  fb: !pick ? '' : (right
+    ? '⭕ 정답이에요. ' + q.why
+    : '❌ ' + ((q.no && q.no[pick]) ? q.no[pick] + ' → ' : '') + '정답은 ' + q.a + ' 분석이에요.'),
+  ```
+  - `pick` 이 없거나(`no` 에 그 보기가 없으면) 자동으로 `❌ … 정답은 ○○예요.` 일반 문구로 떨어진다 → 모든 보기를 다 채우지 않아도 안전.
+  - `no` 는 **오답 보기별로 1개씩만** 있으면 된다(정답 보기는 `why` 가 담당).
+
+**문구 작성 팁**: ① 학생이 고른 보기가 *맞는* 상황을 한 줄로("'비교'는 ~할 때"), ② 이 문제가 *실제로* 묻는 것을 한 줄로("이 질문은 ~를 묻고 있어요"). 정답 단어만 통보하지 말 것.
+
 ### 1-3. OX 퀴즈 (여러 문항 묶음 채점)
 ```html
 <div class="ox-quiz-item" data-ox-answer="O">
@@ -179,10 +212,17 @@
   <div class="paste-empty"><span class="pz-caret" aria-hidden="true"></span>📷 이 칸을 <span class="kbd">클릭</span>한 뒤 <span class="kbd">Ctrl + V</span> 로 …<br><span class="sm">(그림 파일을 끌어다 놓아도 돼요 · 지우기: 🗑 버튼 또는 Delete)</span></div>
 </div>
 <div class="pz-controls">
-  <button type="button" class="pz-copy">📋 복사</button>
-  <button type="button" class="pz-clear">🗑 지우기</button>
+  <button type="button" class="pz-clear">🗑 지우기</button>   <!-- 📋 복사 버튼은 data5_1/5_2 에서 제거됨 -->
 </div>
 ```
+
+**조작 버튼 줄(`.pz-controls`) 레이아웃** — 붙여넣기 칸 **바로 아래에서 가운데 정렬**한다(버튼이 1개든 여러 개든 칸 중앙 밑에 오게):
+```css
+.pz-controls { display: flex; justify-content: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+@media print { .pz-controls { display: none !important; } }   /* 인쇄·PDF 결과물엔 안 나옴 */
+```
+- 같은 패턴을 **다른 컴포넌트의 "칸 + 아래 조작 버튼 줄" 조합**(예: 그리기 영역 지우기, 표 초기화 버튼 등)에도 그대로 쓴다 — 조작 버튼 줄은 그 컴포넌트 폭 안에서 `justify-content:center` 로 가운데.
+- 버튼 자체 스타일은 §3.10(design.md) primary/secondary 버튼을 재사용하고, 이 줄은 **정렬만** 담당.
 
 **동작** (`</body>` 앞 vanilla IIFE 하나, `document` 위임):
 - **붙여넣기**: `paste` 이벤트에서 `document.activeElement.closest('.paste-zone')` 또는 마지막으로 누른 칸(`lastZone`, `mousedown`/`focusin` 으로 기록)을 대상으로, `clipboardData.items`/`files` 에서 `type` 이 `image/*` 인 것을 `FileReader.readAsDataURL` → `<img>` 로 삽입, `.is-filled` 부여. 이미 그림이 있으면 교체.

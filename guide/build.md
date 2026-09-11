@@ -87,6 +87,91 @@ const sheetWidgetDisplay= s.tab === 'sheet' ? 'flex' : 'none';
 `checks` 토글·`fName`/`a1`/`reflect` 의 `onChange` 는 이미 `setState`→재렌더 하므로 진행률이 자동 갱신된다.
 기존 state·다른 탭·`save`/`reset` 은 건드리지 않았다.
 
+---
+
+## 항목 단위 세분화 진행률 (data5_2.html · design.md §10 항목 집계 (b), 2026-09-10)
+
+### 언제 쓰나
+진행률 분모를 고정 7항목 체크리스트가 아니라 **활동지에 실제로 있는 활동 항목 수**로 잡고 싶을 때.
+data5 계열은 대부분의 답 칸이 `<textarea class="blank">`(**비제어 DOM**, `renderVals` 의 state 로 안 잡힘)이라
+체크리스트 방식으로는 몇 개를 채웠는지 셀 수 없다.
+
+### 집계 대상 (data5_2.html 기준 = 38항목)
+| 항목 유형 | 셀렉터 | "완료" 판정 |
+|---|---|---|
+| 미션 빈칸 33 | `#sheetPrintArea textarea.blank[aria-label]` | `.value.trim().length > 0` |
+| 그래프 붙여넣기 칸 2 | `#sheetPrintArea .paste-zone` | `._imgData` 또는 `.is-filled` 클래스 |
+| 형성평가 문항 3 | `this.state.fq` | 원소가 truthy |
+
+- `[aria-label]` 로 걸러 **MY_INFO 학번·이름칸(aria-label 없음)은 자동 제외**된다(activity guide §1-1 "식별칸 제외" 원칙과 일치). 굳이 넣으려면 `done/total` 에 따로 더한다.
+- OX·짝짓기·순서배열 등 다른 활동을 넣으려면 같은 방식으로 그 개수를 `done`/`total` 에 더하면 된다.
+
+### `renderVals()` 안 헬퍼 + 집계
+```js
+// 클래스 메서드로 추가 (renderVals 밖)
+_progressParts() {
+  const root = document.getElementById('sheetPrintArea');
+  const blanks = root ? Array.prototype.slice.call(root.querySelectorAll('textarea.blank[aria-label]')) : [];
+  const blanksDone = blanks.filter((el) => (el.value || '').trim().length > 0).length;
+  const zones = root ? Array.prototype.slice.call(root.querySelectorAll('.paste-zone')) : [];
+  const zonesDone = zones.filter((z) => z._imgData || (z.classList && z.classList.contains('is-filled'))).length;
+  const fq = this.state.fq || [];
+  return { done: blanksDone + zonesDone + fq.filter(Boolean).length,
+           total: blanks.length + zones.length + fq.length };
+}
+
+// renderVals() 안 — 기존 sheetChecklist 블록을 이걸로 교체
+const _p = this._progressParts();
+const sheetDone  = _p.done;
+const sheetTotal = _p.total || 1;      // 마운트 직후 DOM 아직 없을 때 0-division 방지
+const sheetPct   = Math.round(sheetDone / sheetTotal * 100);
+const sheetFillStyle = 'width:' + sheetPct + '%';
+const sheetSaved = !!s.saved;
+const sheetAria  = sheetTotal + '개 항목 중 ' + sheetDone + '개 완료';
+```
+
+### 실시간 갱신 (핵심 — 비제어 DOM 이라 감시 필요)
+`textarea.blank`·`.paste-zone` 은 값이 바뀌어도 React 재렌더가 안 일어난다 → `componentDidMount()` 에서 이벤트/DOM 변화를 감시해, **진행률 수치가 실제로 달라질 때만** 더미 state(`_tick`)를 올려 재렌더시킨다.
+```js
+state = { …, _tick: 0 };   // 재렌더 트리거 전용, 화면에는 안 씀
+
+componentDidMount() {
+  this._progSig = '';
+  const bump = () => {
+    let p; try { p = this._progressParts(); } catch (e) { return; }
+    const sig = p.done + '/' + p.total;
+    if (sig === this._progSig) return;                 // ★ 시그니처 비교 필수 (안 하면 무한 렌더)
+    this._progSig = sig;
+    this.setState((st) => ({ _tick: (st._tick || 0) + 1 }));
+  };
+  const schedule = () => { clearTimeout(this._progT); this._progT = setTimeout(bump, 90); };  // 90ms 디바운스
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('blank')) schedule();
+  }, true);
+  document.addEventListener('paste', () => setTimeout(schedule, 60), true);
+  document.addEventListener('click', () => setTimeout(schedule, 60), true);   // 붙여넣기 '지우기' 버튼 등
+  if (typeof MutationObserver === 'function') {
+    this._progMo = new MutationObserver(schedule);
+    this._progMo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  }
+  setTimeout(bump, 300); setTimeout(bump, 900);   // 마운트 직후 DOM 준비되면 초기 1회
+}
+```
+
+### 주의
+- **시그니처 비교(`_progSig`)를 빼면** MutationObserver → setState → (DOM 변화) → MutationObserver … 무한 렌더 루프. 반드시 `done/total` 문자열이 바뀐 경우에만 `setState`.
+- 형성평가(`s.fq`)는 이미 `setState` 기반이라 감시 대상 아님. 헬퍼에서 **개수만** 합산한다.
+- `savePdf` 는 클론에서 `textarea.blank`→`<div>` 로 치환하지만, 집계는 라이브 `#sheetPrintArea` 를 보므로 영향 없음.
+- 수치가 `n/38` 처럼 커져도 design.md §10.5 규정대로 `.sub`(트랙 밖)에만 표기. 필 위에 글자 얹지 않음.
+- `sheetSaved`(제출 배지)는 여전히 집계 제외.
+
+### 검증 (헤드리스, 2026-09-10)
+- 초기 렌더: `0%` · `0/38`.
+- 빈칸 5개에 값 입력 + 형성평가 1문항 클릭 → 위젯이 `16%` · `6/38` 로 **실시간 갱신**. 콘솔 에러 0, `renderVals()` 오류 0.
+
+### data4.html 로 역이식할 때
+data4 는 대부분 활동이 이미 state 바인딩이라 굳이 필요 없지만, DOM-only 활동(스샷 붙여넣기 등)을 진행률에 넣고 싶으면 위 `_progressParts`/`componentDidMount` 감시 패턴만 떼어다 쓰면 된다.
+
 ### zoom 보정 — 택한 방법과 이유
 - 문제: 본문 래퍼 `zoom:1.1`. `zoom` 은 Chrome 에서 그 안의 `position:fixed` 요소의 좌표계·`vw`·`px`
   를 1.1배로 부풀려, `right`/`top`/`width` 가 어긋나고 본문과 겹친다.
@@ -414,3 +499,57 @@ data4_1.html 에 이식. **`data4.html` 은 건드리지 않는다** — data4_1
 - 수업 활동지 탭 → 이름칸 입력 → `#pdfBtn` 클릭: 복제본 캡처 canvas **1544×12856(scale 2)**,
   **6페이지 A4 PDF** 생성 성공. JPEG 0.9 기준 blob 크기 정상(수 MB 대). holder 정리·버튼 복구 확인.
 - `data4.html 이 바뀌면 재생성` 절차에 추가할 것: 위 `<head>` 인라인 2종 + `savePdf` 재작성.
+
+---
+
+## 스크린샷 그리드 정규화 (여러 장 이미지 균일화)
+
+### 목적
+`.shot-grid`(특히 `--2x2`) 안에 캡처 이미지가 2장 이상인데 비율·크기·포맷이 제각각이면
+칸 높이가 들쭉날쭉하고, 일부만 `.shot-ph style="max-width:66.67%"` 같은 개별 스타일이 붙어
+그리드가 깨져 보인다. → **모두 같은 규격의 흰 정사각 캔버스로 다시 그린다.**
+규격 정의는 `design.md` §3.15. (2026-09-10 `data5_2.html` MISSION 3 비교 분석 그리드에 최초 적용.)
+
+### 절차
+1. **대상 그리드 특정** — 해당 미션 마커에서 `class="shot-grid shot-grid--2x2"` 를 찾고,
+   그 여는 `<div` 부터 `<div>`/`</div>` 깊이 카운트로 닫는 `</div>` 까지가 블록.
+   (다른 미션이 같은 이미지(예: `그래프1.png` ① 단계)를 공유하므로 **블록 범위 안에서만** 치환.)
+2. **각 `<img>` 의 base64 추출** → 아래 스크립트로 정규화 → 새 PNG base64 로 교체.
+   `data:image/jpeg` 였던 것도 `data:image/png` 로 바꾼다.
+3. **`.shot-ph` 래퍼의 인라인 style 제거** — `style="max-width:66.67%; margin:0 auto"` 등 삭제,
+   `data-shot="…"` 식별자는 유지. (블록 범위로 한정 — 다른 미션 그리드 건드리지 말 것.)
+4. 원래 줄바꿈(LF/CRLF) 유지해 다시 저장.
+
+### 정규화 스크립트 (PowerShell + System.Drawing)
+```powershell
+Add-Type -AssemblyName System.Drawing
+$CANVAS = 600; $SAFE = 560        # 정사각 크기 / 안전영역(가장자리 20px 여백)
+foreach ($src in $paths) {
+  $o = [System.Drawing.Image]::FromFile($src); $ow=$o.Width; $oh=$o.Height
+  $sx=[double]$SAFE/[double]$ow; $sy=[double]$SAFE/[double]$oh          # ★ 반드시 [double] 캐스팅
+  $scale = [double][Math]::Min([double][Math]::Min($sx,$sy), [double]1.6)   # 축소 무제한 · 확대 최대 1.6x
+  $nw=[int][Math]::Round($ow*$scale); $nh=[int][Math]::Round($oh*$scale)
+  $bmp = New-Object System.Drawing.Bitmap($CANVAS,$CANVAS); $bmp.SetResolution(96,96)
+  $g = [System.Drawing.Graphics]::FromImage($bmp)
+  $g.Clear([System.Drawing.Color]::White)
+  $g.InterpolationMode  = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+  $g.PixelOffsetMode    = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+  $g.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+  $g.DrawImage($o, (New-Object System.Drawing.Rectangle([int](($CANVAS-$nw)/2),[int](($CANVAS-$nh)/2),$nw,$nh)))
+  $g.Dispose()
+  $bmp.Save($dst, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose(); $o.Dispose()
+}
+```
+- **`[Math]::Min(정수1, 0.9…)` 함정**: PowerShell이 `0.9…` 를 `[int]` 로 반올림(→1)해 축소가 안 먹는다.
+  피연산자를 모두 `[double]` 로 캐스팅할 것.
+- **스크린샷 픽셀은 손대지 않음** — contain 배치·여백만. 굽힌 캡션 텍스트 crop 등은 하지 않는다(별도 요청 시만).
+- 작은 이미지(예: 툴바 띠)는 1.6x 확대해도 약간 흐릿 — 허용. 그 이상 확대 금지.
+
+### 파일 크기
+- 정사각 PNG 4장이면 원본 대비 **+0.4~0.5MB** 정도 증가 가능(내장형 파일이라 base64 33% 포함).
+  크기가 부담되면 `$CANVAS` 를 520~560 으로 낮추거나 확대 배율을 1.3x 로 줄인다.
+
+### 검증
+- 헤드리스로 해당 탭(또는 그리드만 담은 임시 HTML) 렌더 → **콘솔 에러 0**, `.shot-ph` 칸 수 유지.
+- 그리드 스크린샷 육안: 4칸이 **동일 크기·정렬**, 테두리·모서리·배경 균일한지.
+- 다른 미션 그리드의 `max-width:66.67%` 가 실수로 지워지지 않았는지 파일 전체 카운트로 확인.
