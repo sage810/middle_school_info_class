@@ -1,0 +1,3914 @@
+<!DOCTYPE html>
+<!--
+  =========================================================================
+  정보 교과 컴퓨터실 페이지  (구글 사이트 '삽입할 코드' 전용 단일 HTML 파일)
+  =========================================================================
+  이 파일 하나에 HTML + CSS(<style>) + JS(<script>)가 모두 들어 있습니다.
+  구글 사이트 편집기 → 삽입 → "삽입할 코드" 에 이 파일 내용을 그대로
+  복사해서 붙여넣으면 됩니다.
+
+  "학습지 PDF로 저장하기" 버튼은 html2canvas + jsPDF 외부 라이브러리를
+  cdnjs.cloudflare.com에서 불러와, 버튼 한 번으로 바로 PDF 파일이
+  다운로드되도록 만들어져 있습니다(인쇄창 없음). 자세한 내용은
+  [수정 0](라이브러리 불러오기)과 [수정 3](버튼 동작 스크립트)을 보세요.
+
+  ▶ 자주 수정할 부분은 아래처럼 표시해 두었습니다.
+     [수정 0] [수정 1] [수정 2] ... 로 검색(Ctrl+F)하면 빠르게 찾을 수 있어요.
+  =========================================================================
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>정보실 컴퓨터실 페이지</title>
+
+<!--
+  [수정 15] 구글 폰트(Google Sans Flex / Gowun Dodum).
+  영어·숫자는 Google Sans Flex로, 한글은 Gowun Dodum(고운돋움 - 부드럽고
+  귀엽고 정갈한 느낌의 고딕체)으로 보이도록 한 폰트 목록(font-family)
+  안에 순서대로 나열해두었습니다. 브라우저는 글자 하나하나마다
+  "지금 폰트에 이 글자가 있나?"를 확인해서 없으면 다음 폰트로 자동으로
+  넘어가요. Google Sans Flex에는 한글이 없어서 한글은 자동으로
+  Gowun Dodum으로 넘어가 표시됩니다.
+  (참고: Gowun Dodum은 굵기가 1가지(Regular)뿐이라, 지금 제목/배지처럼
+  굵게(bold) 쓰는 곳은 브라우저가 자동으로 살짝 굵게 흉내 내서
+  보여줘요 — 정식 Bold 서체보다는 아주 약간 덜 또렷할 수 있어요.)
+  구글 사이트 iframe 안에서 로드가 막히는 경우를 대비해 폰트가 없어도
+  아래 font-family의 시스템 폰트로 자연스럽게 대체되도록 해두었습니다.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..800&family=Gowun+Dodum&display=swap" rel="stylesheet">
+
+<!--
+  [수정 0] "학습지 PDF로 저장하기" 버튼이 화면을 그대로 캡처해 PDF 파일로
+  바로 내려받게 해주는 외부 라이브러리 2개입니다 (cdnjs, 무료/오픈소스).
+    - html2canvas : 화면(학습지 영역)을 이미지로 캡처
+    - jsPDF       : 그 이미지를 PDF 파일로 만들어 다운로드
+  구글 사이트는 외부 스크립트 로드를 막지 않으므로 그대로 두면 됩니다.
+  혹시 학교 네트워크가 cdnjs를 차단해 두 파일을 못 불러오면, 버튼을 눌러도
+  이 스크립트들이 무시되고 자동으로 "브라우저 인쇄창 열기" 방식으로
+  대체되도록 만들어 두었습니다(아래 [수정 3] 참고).
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  /* =====================================================================
+     [수정 1] 색상 / 폰트 변수 — 여기 값만 바꾸면 전체 페이지 색이 바뀝니다.
+     (첨부해주신 디스코드 스타일 무드보드에서 그대로 가져온 값입니다)
+     ===================================================================== */
+  :root{
+    --color-primary:   #6366F1; /* 노션 블루 - 진짜 버튼/탭/칩에 사용 */
+    --color-on-primary:#ffffff;
+    --color-green:     #0F7B6C; /* 노션 그린 - 저장 버튼 전용 */
+    --color-magenta:   #895BAB; /* 노션 퍼플 - 배지/"보라색 상자" 문구용 */
+    --color-link:      #6366F1;
+    --color-canvas:    #F3F1FA;
+    --color-surface-1: #F5F5F6; /* 노션 사이드바/페이지 오프화이트 */
+    --color-surface-2: #EBEBED; /* 노션 회색 콜아웃 배경 */
+    --color-ink:       #37352F; /* 노션 특유의 따뜻한 다크그레이(순검정 아님) */
+    --color-ink-dark:  #37352F;
+    --color-muted:     #73726F; /* 노션 보조 글자 회색 */
+    --color-hairline:  #E9E9E7; /* 노션 디바이더 회색 */
+
+    /* [수정 15] 영어/숫자는 Google Sans Flex, 한글은 Gowun Dodum(고운돋움)으로
+       표시됩니다. (동작 원리는 위쪽 <link> 태그 옆 주석 참고) */
+    --font-display: 'Google Sans Flex', 'Gowun Dodum', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-body:    'Google Sans Flex', 'Gowun Dodum', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --radius-pill: 6px; /* 노션은 알약 모양 대신 작게 둥근 사각형을 씀 */
+
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 20px;
+    --space-xl: 24px;
+    --space-xxl: 32px;
+    --space-section: 40px;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    font-family: var(--font-body);
+    background:
+      radial-gradient(1100px 500px at 12% -10%, rgba(0,0,0,0), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(0,0,0,0), transparent 55%),
+      var(--color-canvas);
+    color: var(--color-ink);
+    line-height:1.5;
+    min-height:100vh;
+  }
+
+  .app{ max-width:1100px; margin:0 auto; padding: var(--space-md) var(--space-md) var(--space-section); }
+
+  /* ---------------------------------------------------------------------
+     상단 바 + 탭(페이지 전환) 메뉴
+     [수정 2] 탭 이름은 아래 <button class="tab-btn">...</button> 텍스트를
+     바꾸면 됩니다. 페이지(탭)를 더 추가하려면 "탭 추가 방법" 안내를
+     이 파일 맨 아래 주석에서 확인하세요.
+  --------------------------------------------------------------------- */
+  .topbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: #E5E7F2;
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-xl);
+    position: sticky;
+    top: var(--space-sm);
+    z-index: 20;
+  }
+  .brand{
+    font-family: var(--font-display);
+    font-weight:800;
+    font-size: 20px;
+    letter-spacing:0.02em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .tabs{
+    display:flex;
+    gap: var(--space-xs);
+    flex-wrap:wrap;
+  }
+  .tab-btn{
+    font-family: var(--font-body);
+    font-weight:600;
+    font-size: 15px;
+    color: var(--color-ink);
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding: 10px 20px;
+    cursor:pointer;
+    transition: transform .12s ease, background .12s ease;
+    min-height:44px; /* 터치 영역 확보 */
+  }
+  .tab-btn:hover{ transform: translateY(-1px); }
+  .tab-btn.active{
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  /* ---------------------------------------------------------------------
+     탭 패널 전환 (JS가 .active 클래스를 붙였다 뗐다 합니다)
+  --------------------------------------------------------------------- */
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------------------------------------------------------------------
+     [탭 1] 컴퓨터실 이용 수칙
+  --------------------------------------------------------------------- */
+  /* [수정 7] Aceternity "Grid/Dot Background" 스타일 — 점 패턴을 살짝 깔아
+     화면에 은은한 질감을 더합니다. 점을 없애고 싶으면 background-image 줄만
+     지우세요. */
+  .hero{
+    padding: var(--space-xxl) var(--space-xl);
+    background:
+      radial-gradient(rgba(0,0,0,0) 1px, transparent 1.4px) 0 0 / 22px 22px,
+      var(--color-surface-1);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--color-hairline);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero h1{
+    font-family: var(--font-display);
+    font-weight:800;
+    font-size: clamp(28px, 5vw, 44px);
+    line-height:1.15;
+    margin:0 0 var(--space-sm);
+  }
+  .hero p{
+    color: var(--color-muted);
+    font-size: 17px;
+    max-width:60ch;
+    margin:0;
+  }
+
+  .rule-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr); /* 카드 4개를 2x2로 배치 */
+    gap: var(--space-lg);
+  }
+  @media (max-width: 640px){
+    .rule-grid{ grid-template-columns: 1fr; }
+  }
+  /* [수정 8] Aceternity "Wobble Card" 효과 — 카드 위에서 마우스를 움직이면
+     카드가 마우스 쪽으로 살짝 따라오면서 커집니다(트랙패드/마우스 환경에서만
+     동작, 터치 기기에서는 자연스럽게 비활성). transform 값은 JS([수정 8-1])가
+     계산해서 넣어줍니다 — 여기서는 부드럽게 되돌아오는 트랜지션만 정의합니다. */
+  .rule-card{
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: none;
+    min-height:180px;
+    display:flex;
+    flex-direction:column;
+    gap: var(--space-sm);
+    transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
+    will-change: transform;
+  }
+  .rule-card:hover{ box-shadow: none; }
+  @media (prefers-reduced-motion: reduce){
+    .rule-card{ transition:none; }
+  }
+  .rule-card .icon{ font-size:40px; line-height:1; }
+  .rule-card h3{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:20px;
+    margin:0;
+  }
+  .rule-card p{ margin:0; font-size:15px; opacity:.92; }
+  .rule-card.c1{ background: #E1ECF3; } /* 손소독제/손씻기 - 위생 느낌의 파랑 */
+  .rule-card.c2{ background: #E2EFE9; } /* 자기 자리 앉기 - 차분한 민트 */
+  .rule-card.c3{ background: var(--color-surface-1); border:1px solid var(--color-hairline); }
+  .rule-card.c1, .rule-card.c2{ color:#37352F; border:1px solid var(--color-hairline); }
+  .rule-grid .rule-card:nth-child(3){ background:#F4E9C9; color:#37352F; border:1px solid var(--color-hairline); } /* 간식 금지 - 주의를 주는 노랑 */
+  .rule-grid .rule-card:nth-child(4){ background:#F5E2D3; color:#37352F; border:1px solid var(--color-hairline); } /* 의자 이동 금지 - 주의를 주는 피치 */
+
+  /* [수업 활동지] 탭 안의 보조 설명 글자(콜아웃 본문, 힌트, 진행률 라벨,
+     드래그/OX 버튼 등)가 전부 --color-muted(#73726F)를 쓰는데, 옅은 라벤더
+     배경 위에서는 흐릿해 보였습니다. 학습지 탭(#tab-worksheet) 안에서만
+     --color-muted를 "MISSION 1" 같은 제목 글자와 같은 색(--color-ink,
+     #37352F)으로 맞춰서 진하고 선명하게 만들고, 급식/이용 수칙 탭은
+     그대로 둡니다. 또한 본문 글자(고운돋움 Regular 한 가지 굵기)가 얇아
+     보여서, font-weight를 살짝 올려 조금 더 두껍게 보이도록 했습니다 —
+     제목/배지처럼 이미 자기만의 굵기를 정해둔 곳은 그 값이 그대로
+     우선하니 영향받지 않습니다. (내용 텍스트는 전혀 바꾸지 않고
+     색상·굵기 값만 덮어씁니다.) */
+  #tab-worksheet{ --color-muted: var(--color-ink); font-weight: 600; }
+
+  /* ---------------------------------------------------------------------
+     [탭 1.5] 시간표 (NEIS 나이스 교육정보 개방포털 중학교시간표 API)
+     [수정 27] 학교/인증키를 바꾸려면 아래쪽 <script> 안의 TT_CONFIG를 보세요.
+     레이아웃은 급식 탭(.meal-card/.meal-view-switch/.meal-nav/.meal-month-*)의
+     클래스를 그대로 재사용하고, 시간표 전용 부분(학년·반 선택, 교시 목록)만
+     .tt-*로 새로 만들었습니다.
+  --------------------------------------------------------------------- */
+  /* [수정 35] 동아리활동 관련 주의 메시지 — 급식 탭 미리보기에서 쓰던
+     경고 박스 스타일(연한 주황 배경)을 그대로 재사용했습니다. */
+  .tt-note{
+    display:block;
+    margin-top: var(--space-sm);
+    background:#F7EFD9;
+    border:1px solid #F3D9A8;
+    border-radius: var(--radius-md);
+    /* [수정 36] 60ch로 고정폭이었던 걸 없애고, 화면 너비에 따라 패딩·
+       글자 크기가 함께 조절되도록(clamp) 바꿨습니다 — 좁은 화면(모바일)
+       에서도, 넓은 화면(PC)에서 카드 폭을 꽉 채울 때도 자연스럽게
+       늘어나고 줄어듭니다. */
+    padding: clamp(8px, 1.4vw, 12px) clamp(12px, 2vw, 16px);
+    font-size: clamp(12.5px, 1.6vw, 14.5px);
+    line-height:1.6;
+    font-weight:700;
+    color:#4A3608;
+    width:100%;
+    max-width:100%;
+  }
+  /* [수정 37] "동아리 시간"/"학스 시간" 두 단어를 서로 다른 파스텔 배경으로
+     강조합니다. */
+  .tt-note-hl{
+    display:inline-block;
+    padding: 1px 7px;
+    border-radius: var(--radius-sm);
+  }
+  .tt-note-hl-a{ background:#A9DFFF; } /* 동아리 시간 — 파스텔 블루 */
+  .tt-note-hl-b{ background:#FFB8E0; } /* 학스 시간 — 파스텔 핑크 */
+  .tt-select-row{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  .tt-select-row label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family: var(--font-body);
+    font-size:13.5px;
+    font-weight:700;
+    color: var(--color-muted);
+  }
+  .tt-select-row select{
+    font-family: var(--font-body);
+    font-size:14px;
+    font-weight:700;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding:6px 14px;
+    cursor:pointer;
+  }
+  .tt-content{ display:flex; flex-direction:column; align-items:center; }
+  .tt-period-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    width:100%;
+    max-width:360px;
+  }
+  .tt-period-row{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:12px;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding:10px 18px;
+    border: 2px solid transparent;
+  }
+  .tt-period-num{
+    font-family: var(--font-display);
+    font-weight:800;
+    font-size:15px;
+    color: var(--color-primary);
+    min-width:44px;
+    text-align:center;
+  }
+  .tt-period-subject{ font-family: var(--font-display); font-weight:700; font-size:17px; }
+
+  /* [수정 28] 일간 보기 전용 — 교시별 시작~종료 시각, 완료/진행중/예정 배지,
+     지금 교시 테두리 강조에 쓰는 스타일입니다. */
+  .tt-period-main{
+    display:flex;
+    flex-direction:column;
+    flex:1 1 auto;
+    min-width:0;
+    gap:2px;
+  }
+  .tt-period-time{
+    font-family: var(--font-body);
+    font-weight:600;
+    font-size:11.5px;
+    color: var(--color-muted);
+  }
+  .tt-period-badge{
+    font-family: var(--font-body);
+    font-weight:800;
+    font-size:11px;
+    padding:3px 10px;
+    border-radius: var(--radius-pill);
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+  .tt-badge-now{ background: var(--color-primary); color: var(--color-on-primary); }
+  .tt-badge-upcoming{ background: var(--color-surface-1); color: var(--color-muted); border:1px solid var(--color-hairline); }
+  .tt-badge-done{ background: transparent; color: var(--color-muted); border:1px solid var(--color-hairline); }
+
+  .tt-period-row.is-current{ border-color: var(--color-primary); background: var(--color-surface-1); }
+  .tt-period-row.is-done{ opacity: 0.5; }
+
+  /* [수정 34] 토요휴업일·방학·기념일처럼 수업이 없는 날은 "n교시" 없이
+     이름 하나만 가운데에 보여줍니다. */
+  .tt-period-row-wholeday{ justify-content:center; }
+  .meal-week-day .tt-period-row-wholeday,
+  .meal-month-cell .tt-period-row-wholeday{ justify-content:flex-start; }
+
+  /* 주간·월간 칸 안에서는 급식 탭과 같은 톤으로 더 작고 조밀하게 보여줍니다. */
+  .meal-week-day .tt-period-list{ gap:5px; max-width:none; }
+  .meal-week-day .tt-period-row{ background:transparent; padding:0; border:none; justify-content:flex-start; gap:6px; }
+  .meal-week-day .tt-period-num{ font-size:11.5px; min-width:auto; color: var(--color-muted); }
+  .meal-week-day .tt-period-subject{ font-size:13.5px; font-weight:700; }
+
+  .meal-month-cell .tt-period-list{ gap:3px; max-width:none; }
+  .meal-month-cell .tt-period-row{ background:transparent; padding:0; border:none; justify-content:flex-start; gap:4px; }
+  .meal-month-cell .tt-period-num{ font-size:10px; min-width:auto; color: var(--color-muted); }
+  .meal-month-cell .tt-period-subject{ font-size:11.5px; font-weight:700; }
+  @media (max-width: 700px){
+    .meal-month-cell .tt-period-subject{ font-size:10.5px; }
+  }
+
+  /* [수정 35] 시간표 탭의 월간 보기만 — 일요일·토요일 칸은 좁게, 월~금
+     칸은 서로 같은 폭으로 넓게 보여줍니다. #ttMonthView로 감싸서 급식
+     탭의 월간 보기(.meal-month-*를 그대로 재사용)는 영향받지 않습니다. */
+  #ttMonthView .meal-month-weekdays,
+  #ttMonthView .meal-month-grid{
+    grid-template-columns: 0.6fr repeat(5, 1fr) 0.6fr;
+  }
+
+  /* ---------------------------------------------------------------------
+     [탭 2] 오늘의 급식 (NEIS 나이스 교육정보 개방포털 학교급식식단정보 API)
+     [수정 22] 학교/인증키를 바꾸려면 아래쪽 <script> 안의 NEIS_CONFIG를 보세요.
+  --------------------------------------------------------------------- */
+  .meal-card{
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: none;
+  }
+  /* [수정 25] 일간/주간/월간 전환 버튼 (세그먼트 컨트롤) */
+  .meal-view-switch{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-bottom: var(--space-lg);
+  }
+  .meal-view-btn{
+    font-family: var(--font-body);
+    font-size:13.5px;
+    font-weight:700;
+    color: var(--color-muted);
+    background: transparent;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding:6px 18px;
+    cursor:pointer;
+  }
+  .meal-view-btn:hover{ color: var(--color-ink); border-color: var(--color-primary); }
+  .meal-view-btn.active{
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+  }
+  .meal-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+  .meal-nav-btn{
+    font-family: var(--font-display);
+    font-size:18px;
+    font-weight:700;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    width:40px;
+    height:40px;
+    cursor:pointer;
+    flex: 0 0 auto;
+  }
+  .meal-nav-btn:hover{ border-color: var(--color-primary); }
+  .meal-date{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:20px;
+    text-align:center;
+    min-width:220px;
+  }
+  .meal-today-row{ display:flex; justify-content:center; margin-bottom: var(--space-lg); }
+  .meal-today-btn{
+    font-family: var(--font-body);
+    font-size:13px;
+    color: var(--color-muted);
+    background:transparent;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding: 6px 16px;
+    cursor:pointer;
+  }
+  .meal-today-btn:hover{ color: var(--color-ink); border-color: var(--color-primary); }
+  .meal-content{ display:flex; flex-direction:column; gap: var(--space-lg); }
+  .meal-status{
+    text-align:center;
+    color: var(--color-muted);
+    font-size:15px;
+    padding: var(--space-xl) 0;
+    margin:0;
+  }
+  .meal-type-block{
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+  }
+  .meal-dish-list{
+    list-style:none;
+    margin:0 0 var(--space-sm);
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .meal-dish-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px;
+  }
+  .meal-dish-name{ font-family: var(--font-display); font-weight:700; font-size:19px; }
+  .meal-allergy-tags{ display:flex; flex-wrap:wrap; gap:4px; }
+  .meal-allergy-tag{
+    font-family: var(--font-body);
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius: var(--radius-pill);
+    color: var(--color-ink-dark);
+    white-space:nowrap;
+  }
+  .meal-cal{ color: var(--color-muted); font-size:13px; margin:0; }
+  /* 일간 보기(#mealContent)만 급식표를 가운데 정렬합니다. 주간·월간 카드는
+     칸이 좁아서 왼쪽 정렬을 그대로 두는 게 더 읽기 편합니다. */
+  #mealContent .meal-dish-row{ justify-content:center; }
+  #mealContent .meal-cal{ text-align:center; }
+
+  /* [수정 25-1] 주간 보기 — 월~금 5칸. 화면이 좁으면 2줄로 줄바꿈됩니다. */
+  .meal-week-grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-sm);
+  }
+  @media (max-width: 760px){
+    .meal-week-grid{ grid-template-columns: repeat(2, 1fr); }
+  }
+  .meal-week-day{
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    padding: var(--space-sm);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .meal-week-day:hover{ border-color: var(--color-primary); }
+  .meal-week-day.is-today{ border-color: var(--color-primary); }
+  .meal-week-day-label{
+    font-family: var(--font-display);
+    font-size:12.5px;
+    color: var(--color-muted);
+    display:flex;
+    align-items:baseline;
+    gap:5px;
+  }
+  .meal-week-day-label b{ color: var(--color-ink); font-size:16px; }
+  .meal-week-day .meal-dish-list{ gap:6px; margin:0; }
+  .meal-week-day .meal-dish-name{ font-size:14.5px; font-weight:700; }
+  .meal-week-day .meal-allergy-tag{ font-size:10px; padding:1px 6px; }
+  .meal-week-empty{ font-size:12.5px; color: var(--color-muted); margin:0; }
+
+  /* [수정 25-2] 월간 보기 — 7칸짜리 달력 그리드. 칸 안에는 그날 요리 이름만
+     간단히 미리보기로 보여주고, 자세한 알레르기 정보는 칸을 클릭해서
+     일간 보기로 넘어가면 확인할 수 있습니다. */
+  .meal-month-weekdays{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap:4px;
+    margin-bottom:6px;
+  }
+  .meal-month-weekdays span{
+    text-align:center;
+    font-size:12px;
+    font-weight:700;
+    color: var(--color-muted);
+  }
+  .meal-month-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap:4px;
+  }
+  .meal-month-cell{
+    min-height:72px;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    padding: var(--space-sm);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .meal-month-cell:hover{ border-color: var(--color-primary); }
+  .meal-month-cell.is-today{ border-color: var(--color-primary); }
+  .meal-month-cell.is-empty{ background:transparent; cursor:default; min-height:0; }
+  .meal-month-date{ font-family: var(--font-display); font-size:16px; font-weight:800; color: var(--color-ink); }
+  /* [수정 25-6] 월간 칸 안 요리 이름을 주간 카드와 똑같은 스타일(줄바꿈 목록,
+     14.5px 굵게)로 보여줍니다 — buildDishListEl(row, true)로 만든
+     .meal-dish-list를 그대로 재사용합니다. */
+  .meal-month-cell .meal-dish-list{ gap:6px; margin:0; }
+  .meal-month-cell .meal-dish-name{ font-size:14.5px; font-weight:700; }
+  @media (max-width: 700px){
+    .meal-month-cell .meal-dish-name{ font-size:12.5px; }
+  }
+
+  /* ---------------------------------------------------------------------
+     [탭 3] 학습지 (빈칸 채우기)
+  --------------------------------------------------------------------- */
+  .sheet{
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+  }
+  .sheet-header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap: var(--space-md);
+    padding-bottom: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+  .sheet-header h2{
+    font-family: var(--font-display);
+    font-weight:800;
+    font-size: clamp(22px,4vw,30px);
+    margin:0;
+  }
+  .id-fields{
+    display:flex;
+    flex-wrap:wrap;
+    gap: var(--space-sm);
+    align-items:center;
+    font-size:16px;
+    color: var(--color-muted);
+  }
+  .id-fields input{ width:56px; }
+  .id-fields input.name{ width:120px; }
+
+  /* [수정 10] 임시 저장 표시줄
+     [수정 18] 이 줄은 대부분 비어 있는데도(글자가 잠깐만 떴다 사라짐)
+     항상 자리를 차지하고 있어서, 반/번호/이름 칸과 진행률 표시줄 사이가
+     너무 벌어져 보였어요. 위아래 여백과 최소 높이를 줄여 그 공백을
+     좁혔습니다. */
+  .autosave-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: var(--space-sm);
+    margin: -4px 0 4px;
+    min-height: 16px;
+  }
+  .autosave-status{
+    font-size:16px;
+    color: var(--color-green);
+    opacity:0;
+    transition: opacity .4s ease;
+  }
+  .autosave-status.visible{ opacity:1; }
+
+  /* [수정 11] 진행률 표시 — 화면에서만 보이는 안내용이라 no-print를 붙여
+     PDF/인쇄 결과물에는 나오지 않습니다. */
+  /* [수정 14] 진행률 표시줄도 위 상단 탭 바(.topbar)처럼 스크롤해도
+     화면에 고정되어 보이도록 position:sticky를 적용했습니다.
+     - top 값은 상단 탭 바의 실제 높이에 맞춰 JS(updateProgressStickyTop 함수)가
+       자동으로 계산해서 --progress-sticky-top 변수에 넣어줍니다.
+       (탭 바 높이가 화면 크기에 따라 달라지기 때문이에요)
+     - z-index를 탭 바(20)보다 낮은 15로 두어, 혹시 겹치더라도 탭 바가 항상 위에 보입니다.
+     - 배경을 불투명하게 채워서, 아래 내용이 고정된 진행률 바 뒤로
+       비쳐 보이지 않도록 했습니다. */
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    position: sticky;
+    top: var(--progress-sticky-top, 84px);
+    z-index: 15;
+    background: #F3F1FA;
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--space-sm) var(--space-md);
+  }
+  .progress-track{
+    flex:1;
+    height:10px;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-pill);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-green));
+    border-radius: var(--radius-pill);
+    transition: width .3s ease;
+  }
+  .progress-label{
+    font-size:16px;
+    color: var(--color-muted);
+    white-space:nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* [수정 12] 클릭형 객관식 카드 — 클릭할 때마다 정답으로 골랐다/안 골랐다를
+     토글합니다. 카드를 더 추가/삭제하려면 아래 HTML의 <button class="choice-card">
+     블록을 복사하거나 지우면 됩니다. */
+  .choice-card-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  .choice-card{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family: var(--font-body);
+    font-size:17px;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    border: 2px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    padding: 8px 14px;
+    cursor:pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .choice-card:hover{ border-color: var(--color-primary); transform: translateY(-1px); }
+  .choice-card:focus-visible{ outline:3px solid var(--color-green); outline-offset:2px; }
+  /* [수정 17] 체크 표시(✅)는 선택 전엔 폭을 0으로 접어서, 버튼이 실제
+     아이콘+글자 크기에 딱 맞게 보이도록 했습니다(이전엔 투명하게만
+     숨겨서 안 보여도 자리를 차지해 버튼이 필요 이상으로 커 보였어요). */
+  .choice-card .check{
+    display:inline-block;
+    width:0;
+    overflow:hidden;
+    opacity:0;
+    transition: width .15s ease, opacity .15s ease;
+  }
+  .choice-card.selected{
+    background: rgba(53,237,126,0.18);
+    border-color: var(--color-green);
+  }
+  .choice-card.selected .check{ width:1.1em; opacity:1; }
+  /* [수정 39] 문장형(서술형) 보기 중 하나를 고르는 미니 퀴즈에 "정답 확인"
+     버튼을 누르면, 고른 카드에 정답(초록)/오답(빨강) 테두리를 표시합니다.
+     .choice-card.selected보다 우선 적용되도록 클래스 3개를 겹쳐서 씁니다. */
+  .choice-card.selected.choice-card--correct{
+    background: rgba(53,237,126,0.18);
+    border-color: var(--color-green);
+  }
+  .choice-card.selected.choice-card--wrong{
+    background: rgba(255,84,112,0.12);
+    border-color:#ff5470;
+  }
+
+  /* [수정 13] 드래그해서 짝짓기 — 이름표(.dnd-chip)를 설명 칸(.dnd-slot)으로
+     드래그하거나, 이름표를 클릭한 뒤 원하는 칸을 클릭해서 놓을 수 있습니다
+     (터치 기기 대응). 항목을 추가하려면 .dnd-chip과 .dnd-row를 세트로
+     늘리고, JS는 자동으로 새 항목도 인식합니다. */
+  .dnd-reset-btn, .ox-reset-btn{
+    font-family: var(--font-body);
+    font-size:16px;
+    color: var(--color-muted);
+    background:transparent;
+    border:1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding: 4px 14px;
+    cursor:pointer;
+    margin-bottom: var(--space-sm);
+  }
+  .dnd-reset-btn:hover, .ox-reset-btn:hover{ color: var(--color-ink); border-color: var(--color-magenta); }
+  .dnd-tray{
+    display:flex;
+    flex-wrap:wrap;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-md);
+    min-height: 56px;
+  }
+  .dnd-chip{
+    background: var(--color-primary);
+    color:#fff;
+    font-weight:700;
+    font-size:17px;
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    cursor:grab;
+    user-select:none;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .dnd-chip:active{ cursor:grabbing; }
+  .dnd-chip:focus-visible{ outline:3px solid var(--color-green); outline-offset:2px; }
+  .dnd-chip.armed{ outline:3px solid var(--color-green); outline-offset:2px; }
+  .dnd-chip.dragging{ opacity:.4; }
+  .dnd-row{
+    display:flex;
+    align-items:center;
+    gap: var(--space-md);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-xs);
+  }
+  .dnd-row p{ margin:0; font-size:18px; flex:1; }
+  /* [수정 24] 파일 이름 + 확장자 칸 + 데이터 종류 칸처럼 칸이 2개인 줄은
+     기본 스타일(이름표가 flex:1로 늘어나 칸들이 줄 오른쪽 끝에 붙는 모습)
+     대신, 이름 + 칸들을 하나의 묶음으로 보고 그 묶음을 줄 가운데에
+     오도록 만듭니다. 이름과 첫 번째 칸 사이는 50px 여백을 둡니다.
+     이 모양이 필요한 줄에만 dnd-row 옆에 dnd-row--center 클래스를 함께 씁니다. */
+  .dnd-row--center{ justify-content:center; gap:0; }
+  .dnd-row--center p{ flex:0 0 auto; margin-right:50px; }
+  /* [수정 25] gap을 0으로 바꿨기 때문에, 칸이 2개인 줄에서 칸과 칸 사이
+     간격(기존 16px)은 아래 규칙으로 따로 되살립니다. 이름표와 첫 번째
+     칸 사이의 간격만 50px로 넓히고, 칸끼리의 간격은 그대로 두기 위함. */
+  .dnd-row--center .dnd-slot + .dnd-slot{ margin-left:16px; }
+  /* [수정 17] 짝짓기 칸에 글 대신 사진을 넣을 때 쓰는 래퍼 —
+     .dnd-row p와 똑같이 flex:1로 남은 공간을 차지해서, 오른쪽 칸이
+     항상 줄 끝에 나란히 정렬되도록 맞춰줍니다. */
+  /* [수정 18] flex:1을 빼서 사진이 늘어난 빈 상자 안에 혼자 떠 있지 않고,
+     바로 옆 칸(.dnd-slot)에 가깝게 붙어 보이도록 했습니다. */
+  .dnd-row-media{ display:flex; align-items:center; }
+  /* [수정 28] 줄(.dnd-row)이 10개라 세로로 너무 길어지는 활동은, 이 래퍼로
+     감싸서 2열로 나란히 배치합니다(5행 2열). 줄 순서 그대로 왼쪽 위 →
+     오른쪽 위 → 왼쪽 그 다음 줄 … 순서로 채워집니다. 화면이 좁아지면
+     (아래 480px 미디어쿼리) 다시 1열로 자연스럽게 풀립니다. */
+  .dnd-grid-2col{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xs) var(--space-md);
+  }
+  .dnd-grid-2col .dnd-row{ margin-bottom:0; }
+  @media (max-width: 640px){
+    .dnd-grid-2col{ grid-template-columns: 1fr; }
+  }
+  .dnd-slot{
+    min-width:120px;
+    min-height:40px;
+    border: 2px dashed var(--color-hairline);
+    border-radius: var(--radius-lg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--color-muted);
+    font-size:16px;
+    flex-shrink:0;
+  }
+  .dnd-slot:empty::before{ content:"여기에 놓기"; }
+  .dnd-slot.dragover{ border-color: var(--color-green); background: rgba(53,237,126,0.08); }
+  /* [수정 23] "정답 확인" 버튼을 누르면 각 칸에 맞았는지(초록)/틀렸는지(빨강)
+     표시해줍니다. 이름표는 그대로 두고 색만 바뀌므로, 학생이 직접 옮겨서
+     다시 고칠 수 있어요. 답을 바꾸거나 "다시 섞기"를 누르면 표시는 사라집니다. */
+  .dnd-slot--correct{ border-style:solid; border-color: var(--color-green); background: rgba(53,237,126,0.12); }
+  .dnd-slot--wrong{ border-style:solid; border-color:#ff5470; background: rgba(255,84,112,0.12); }
+  .dnd-check-mark{ margin-left:6px; font-size:17px; }
+  .dnd-check-btn, .ox-check-btn, .choice-check-btn{
+    font-family: var(--font-body);
+    font-size:16px;
+    color: var(--color-muted);
+    background:transparent;
+    border:1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    padding: 4px 14px;
+    cursor:pointer;
+    margin-bottom: var(--space-sm);
+    margin-left: var(--space-xs);
+  }
+  .dnd-check-btn:hover, .ox-check-btn:hover, .choice-check-btn:hover{ color: var(--color-ink); border-color: var(--color-green); }
+  .dnd-check-result{
+    font-size:16px;
+    color: var(--color-muted);
+    margin-left: var(--space-xs);
+  }
+
+  /* [수정 29] MISSION 5 형성평가 — O/X 하나를 버튼으로 골라서 답하고,
+     '정답 확인'을 누르면 문항 상자 테두리가 초록(정답)/빨강(오답)으로
+     표시됩니다(짝짓기 칸의 정답 확인과 같은 방식). 버튼을 다시 누르거나
+     '다시 풀기'를 누르면 표시가 사라지고 처음부터 다시 풀 수 있어요. */
+  .ox-quiz-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: var(--space-md);
+    background: var(--color-surface-2);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-xs);
+  }
+  .ox-quiz-item p{ margin:0; font-size:18px; flex:1; }
+  .ox-choice-row{ display:flex; gap:8px; flex-shrink:0; }
+  .choice-card--ox{
+    min-width:48px;
+    justify-content:center;
+    font-weight:700;
+    padding: 8px 16px;
+  }
+  .ox-quiz-item--correct{ border-color: var(--color-green); background: rgba(53,237,126,0.12); }
+  .ox-quiz-item--wrong{ border-color:#ff5470; background: rgba(255,84,112,0.12); }
+  .ox-check-mark{ margin-left:6px; font-size:18px; flex-shrink:0; }
+
+  /* [수정 38] 미션마다 색이 있는 헤더 바로 감싸는 "색상 헤더 바" 스타일.
+     .section-block을 카드(테두리+둥근 모서리+overflow:hidden)로 만들고,
+     h3 제목만 카드 안쪽 padding을 마이너스 마진으로 상쇄해서 카드 맨 위에
+     가장자리까지 꽉 채운 색 띠로 보이게 만드는 방식입니다. 미션마다 다른
+     색은 아래 .mission-color-1~5 로 HTML의 각 .section-block에 하나씩
+     붙여서 정합니다(순서: 파랑→보라→초록→주황→핑크). */
+  .section-block{
+    margin-bottom: var(--space-xxl);
+    background: #fff;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    padding: 0 20px 20px;
+  }
+  .section-block h3{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:23px;
+    display:flex; align-items:center; gap:8px;
+    margin: 0 -20px var(--space-md);
+    padding: 14px 20px;
+    color:#fff;
+    background: var(--color-primary); /* 색이 아직 안 정해진 경우의 기본값 */
+  }
+  .section-block h3 .badge{
+    background: rgba(255,255,255,0.24);
+    color:#fff;
+    font-size:16px;
+    font-weight:600;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+  }
+  .section-block.mission-color-1 h3{ background: #8FBBE8; color:#37352F; }
+  .section-block.mission-color-2 h3{ background: #62C5AE; color:#37352F; }
+  .section-block.mission-color-3 h3{ background: #F1CC55; color:#37352F; }
+  .section-block.mission-color-4 h3{ background: #F19A62; color:#37352F; }
+  .section-block.mission-color-5 h3{ background: #E9829D; color:#37352F; }
+  /* [수정 39] 위 5가지 미션 배경이 모두 밝은 파스텔이라, 기존의 흰 글씨
+     배지(뱃지)를 그대로 쓰면 거의 안 보입니다. 배경이 밝은 미션 헤더
+     안에서는 배지도 어두운 글씨 + 옅은 검정 틴트로 바꿔줍니다. */
+  .section-block.mission-color-1 h3 .badge,
+  .section-block.mission-color-2 h3 .badge,
+  .section-block.mission-color-3 h3 .badge,
+  .section-block.mission-color-4 h3 .badge,
+  .section-block.mission-color-5 h3 .badge{
+    background: rgba(0,0,0,0.12);
+    color:#37352F;
+  }
+
+  .fill-line{
+    font-size:18px;
+    line-height:1.9;
+    margin: 0 0 var(--space-sm);
+  }
+  .fill-line b{ color: var(--color-link); }
+
+  /* 빈칸 입력창(문장 속 인라인 input)
+     [수정 6] 둥글고 귀여운 느낌 — 밑줄 대신 알약처럼 통통하게 둥근 테두리 상자입니다.
+     더/덜 둥글게 하고 싶으면 border-radius 값만 바꾸세요 (예: 10px = 살짝 둥글게,
+     999px = 완전 알약 모양). */
+  input.blank, textarea.blank{
+    font-family: var(--font-body);
+    font-size: 18px;
+    color: var(--color-ink-dark);
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-lg); /* 16px, 통통하고 둥근 모서리 */
+    padding: 6px 14px;
+    min-width: 90px;
+    max-width: 100%;
+    /* [수정 19] 띄어쓰기 없이 긴 글자(예: 긴 영어 단어, 링크 주소 등)를
+       적어도 칸 너비를 넘어가지 않고 줄바꿈되도록 합니다. */
+    overflow-wrap: break-word;
+    word-break: break-word;
+    transition: border-color .15s ease, transform .1s ease;
+  }
+  input.blank:hover, textarea.blank:hover{ border-color: var(--color-magenta); }
+  input.blank:focus, textarea.blank:focus, .ox-input:focus{
+    outline: none;
+    border-color: var(--color-green);
+    box-shadow: 0 0 0 3px rgba(53,237,126,0.28);
+  }
+  input.blank.wide{ min-width: 160px; }
+  /* [수정 17] 표(테이블) 안에 있는 넓은 입력칸은 칸 너비에 맞춰 꽉 차게 —
+     문장 중간(fill-line)에 낀 넓은 입력칸은 이 규칙의 영향을 받지 않도록
+     table.sheet-table 안에 있을 때만 적용됩니다. */
+  table.sheet-table td input.blank.wide{ width:100%; }
+  /* [수정 17] 여러 줄 입력칸은 손으로 끌어 늘리는 대신, 글자 수가 늘어나면
+     JS(아래 autoGrowTextarea 함수)가 자동으로 칸 높이를 늘려줍니다.
+     그래서 resize는 꺼두고(resize:none), 넘치는 부분이 스크롤바로 보이지
+     않도록 overflow도 숨겨둡니다. */
+  textarea.blank{ width:100%; min-height:38px; resize:none; overflow:hidden; display:block; margin-top:4px; }
+
+  /* O/X 전용 짧은 입력칸 — 동그란 알약 모양으로 더 귀엽게 */
+  .ox-input{
+    width: 50px;
+    text-align:center;
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:18px;
+    color: var(--color-ink-dark);
+    background:#fff;
+    border: 2px solid var(--color-green);
+    border-radius: var(--radius-pill); /* 완전히 둥근 알약 모양 */
+    padding:6px 4px;
+    transition: transform .1s ease;
+  }
+  .ox-input:hover{ transform: scale(1.05); }
+
+  .quiz-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: var(--space-md);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-xs);
+  }
+  .quiz-item p{ margin:0; font-size:18px; flex:1; }
+  /* [수정 16] 퀴즈 문항 안에 사진을 넣고 싶을 때 쓰는 작은 썸네일.
+     사진 원본이 흰 배경용으로 그려져 있어서, 어두운 카드 위에서도 잘
+     보이도록 항상 흰색 알약 배경을 깔아줍니다. */
+  .quiz-item-main{ display:flex; align-items:center; gap: var(--space-sm); flex:1; }
+  .quiz-thumb{
+    width:56px; height:56px; flex-shrink:0;
+    background:#ffffff;
+    border-radius: var(--radius-md);
+    padding:6px;
+    object-fit:contain;
+  }
+
+  /* =====================================================================
+     [수정 16] 안내 상자(콜아웃) 3종 — 재사용 가능한 공통 컴포넌트
+     .callout이 공통 틀이고, 종류별 색만 아래 수식어 클래스로 바꿉니다.
+       .callout--goal   : 파란 테두리 — 목표/안내용
+       .callout--tip    : 초록 테두리 — 도움말(Tip)
+       .callout--gemini : 보라 테두리 — AI 챗봇(제미나이) 활동 전용
+     안내 상자를 더 넣고 싶으면 <div class="callout callout--원하는색">
+     블록을 통째로 복사해서 문구만 바꾸면 됩니다.
+     ===================================================================== */
+  .callout{
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-hairline);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+  .callout h4{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:18px;
+    margin:0 0 6px;
+    color: var(--color-ink);
+    display:flex; align-items:center; gap:6px;
+  }
+  /* [수정 26] "오늘의 목표" 상자는 제목을 <h3>로 쓰는데, 브라우저 기본
+     h3 스타일(위아래 여백 약 19px, 글자 크기도 큼)이 그대로 적용되면
+     상자 위아래 여백이 유독 넓어 보입니다. 다른 안내 상자 제목(h4)과
+     똑같이 여백을 줄여 통일된 느낌을 줍니다. */
+  .callout h3{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:18px;
+    margin:0 0 6px;
+    color: var(--color-ink);
+    display:flex; align-items:center; gap:6px;
+  }
+  .callout p{ margin:0 0 6px; font-size:17px; line-height:1.7; color: var(--color-muted); }
+  .callout p:last-child{ margin-bottom:0; }
+  .callout .example-q{ font-style:italic; color: var(--color-ink); }
+  .callout .callout-label{ font-size:16px; color: var(--color-muted); margin-bottom:4px; }
+  .callout-list{ margin:0; padding-left:1.2em; color: var(--color-muted); font-size:17px; line-height:1.8; }
+
+  .callout--goal{ border-left-color: var(--color-primary); }
+  .callout--tip{ border-left-color: var(--color-green); }
+  .callout--gemini{
+    border-left-color: var(--color-magenta);
+    background: rgba(137,91,171,0.08);
+  }
+  .callout--gemini h4{ color: var(--color-magenta); }
+
+  /* 표(테이블) — 모바일에서 가로 스크롤 가능하도록 래핑 */
+  .table-scroll{ overflow-x:auto; border-radius: var(--radius-md); border: 1px solid var(--color-hairline); }
+  table.sheet-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width: 480px;
+    font-size:17px;
+    background: var(--color-surface-2);
+  }
+  table.sheet-table th, table.sheet-table td{
+    border: 1px solid var(--color-hairline);
+    padding: 10px 12px;
+    text-align:left;
+    vertical-align:middle;
+  }
+  table.sheet-table th{
+    background: rgba(99,102,241,0.10);
+    font-family: var(--font-display);
+    font-weight:700;
+    white-space:nowrap;
+  }
+  /* [수정 40] 내용이 짧아 굳이 화면 전체 너비로 늘어날 필요가 없는 표는
+     이 클래스를 함께 붙이면, 표 자체가 원래 크기만큼만 차지하고 페이지
+     가운데로 정렬됩니다(칸 안 글자도 가운데 정렬). */
+  table.sheet-table.sheet-table--centered{ width:auto; margin:0 auto; }
+  table.sheet-table.sheet-table--centered th,
+  table.sheet-table.sheet-table--centered td{ text-align:center; }
+
+  .hint{ color: var(--color-muted); font-size:16px; margin-top:-4px; margin-bottom: var(--space-md); }
+
+  /* ---------------------------------------------------------------------
+     맨 아래 저장(인쇄→PDF) 버튼
+     [수정 3] 버튼 문구는 여기서 바꿀 수 있습니다.
+  --------------------------------------------------------------------- */
+  .save-bar{
+    display:flex;
+    justify-content:center;
+    margin-top: var(--space-section);
+  }
+  .btn-green{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:19px;
+    color: #ffffff; /* 저장 버튼이 진한 그린 배경이라 흰 글자로 고정 */
+    background: var(--color-green);
+    border:none;
+    border-radius: var(--radius-sm);
+    padding: 14px 28px;
+    cursor:pointer;
+    min-height:44px;
+    box-shadow: 0 3px 68px rgba(53,237,126,0.25);
+  }
+  .btn-green:hover{ filter:brightness(1.05); }
+  .btn-green:disabled{ opacity:.7; cursor:wait; filter:none; }
+  .save-note{
+    text-align:center;
+    color: var(--color-muted);
+    font-size:16px;
+    margin-top: var(--space-sm);
+  }
+
+  .site-footer{
+    text-align:center;
+    color: var(--color-muted);
+    font-size:13px;
+    margin-top: var(--space-xxl);
+  }
+
+  /* =====================================================================
+     인쇄(Ctrl+P) 전용 스타일 — 라이브러리를 못 불러와 "PDF로 저장하기" 버튼이
+     window.print()로 대체 동작할 때, 그리고 사용자가 직접 Ctrl+P를 누를 때
+     학습지(탭2)만 흰 배경 + 검정 글씨로 깔끔하게 출력되도록 합니다.
+     ("PDF로 저장하기" 버튼이 정상 동작할 때는 화면과 별개인 복제본을 만들어
+     캡처하므로 이 규칙과 무관합니다 — 자세한 내용은 JS의 [수정 3] 참고)
+     ===================================================================== */
+  @media print{
+    body{ background:#fff !important; color:#000; }
+    .topbar, .no-print, #tab-rules, #tab-meal, .site-footer{ display:none !important; }
+    #tab-worksheet{ display:block !important; }
+    .sheet{ background:#fff; border:none; padding:0; color:#000; }
+    .sheet-header{ border-bottom:2px solid #000; }
+    .section-block{ border-color:#999; }
+    /* [수정 38] 화면에서는 미션마다 색 헤더 바를 쓰지만, 인쇄(흑백)에서는
+       색이 안 보이거나 잉크 낭비가 될 수 있어서 배경을 없애고 검은 글자 +
+       아래 테두리로 대체합니다. mission-color-1~5의 배경색보다 우선
+       적용되도록 !important를 씁니다. */
+    .section-block h3{
+      background:#fff !important;
+      color:#000 !important;
+      border-bottom:2px solid #000;
+    }
+    .section-block h3 .badge{ background:#eee !important; color:#000 !important; border:1px solid #999; }
+    table.sheet-table{ background:#fff; }
+    table.sheet-table th{ background:#eee; color:#000; }
+    table.sheet-table th, table.sheet-table td{ border-color:#999; }
+    input.blank, textarea.blank, .ox-input{ background:#fff; color:#000; border:1.5px solid #000; border-radius:10px; }
+    .quiz-item{ background:#fafafa; border:1px solid #ddd; }
+    .hint{ color:#555; }
+    a{ color:#000; }
+    .choice-card{ background:#fff; border:2px solid #999; color:#000; }
+    .choice-card.selected{ background:#e8fbef; border-color:#1f9d55; }
+    .choice-card.selected.choice-card--correct{ background:#e8fbef; border-color:#1f9d55; }
+    .choice-card.selected.choice-card--wrong{ background:#fdecec; border-color:#e5484d; }
+    .dnd-tray{ background:#f3f3f3; }
+    .dnd-row{ background:#fafafa; border:1px solid #ddd; }
+    .dnd-row p{ color:#000; }
+    .dnd-slot{ border-color:#999; color:#777; }
+    .dnd-slot--correct{ border-style:solid; border-color:#1f9d55; }
+    .dnd-slot--wrong{ border-style:solid; border-color:#e5484d; }
+    .ox-quiz-item{ background:#fafafa; border:2px solid #ddd; }
+    .ox-quiz-item p{ color:#000; }
+    .ox-quiz-item--correct{ border-color:#1f9d55; }
+    .ox-quiz-item--wrong{ border-color:#e5484d; }
+    .dnd-chip{ background:#e5e7ff; color:#000; border:1.5px solid #5865f2; }
+    /* [수정 16] 안내 상자(콜아웃) 3종 — 인쇄에서도 색 테두리는 유지하되
+       배경/글자는 흑백 인쇄에서 잘 보이도록 밝게 바꿉니다. */
+    .callout{ background:#fafafa; border:1px solid #ddd; border-left-width:4px; }
+    .callout h4{ color:#000; }
+    .callout h3{ color:#000; }
+    .callout p, .callout-list{ color:#333; }
+    .callout .example-q{ color:#000; }
+    .callout--goal{ border-left-color:#5865f2; }
+    .callout--tip{ border-left-color:#1f9d55; }
+    .callout--gemini{ border-left-color:#ec48bd; background:#fdf1fa; }
+    .callout--gemini h4{ color:#ec48bd; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================================================================
+       상단 바: 제목 + 탭(페이지) 버튼
+       [수정 2] "정보실" 이라는 글자와 탭 이름을 원하는 대로 바꾸세요.
+       =================================================================== -->
+  <header class="topbar">
+    <div class="brand">💻 신현중학교 정보</div>
+    <nav class="tabs" role="tablist" aria-label="페이지 선택">
+      <button class="tab-btn active" data-target="tab-rules" role="tab" aria-selected="true">🧼 이용 수칙</button>
+      <button class="tab-btn" data-target="tab-timetable" role="tab" aria-selected="false">🗓️ 시간표</button>
+      <button class="tab-btn" data-target="tab-meal" role="tab" aria-selected="false">🍽️ 오늘의 급식</button>
+      <button class="tab-btn" data-target="tab-worksheet" role="tab" aria-selected="false">📝 수업 활동지</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- =================================================================
+         [탭 1] 컴퓨터실 이용 수칙
+         [수정 4] 문구를 바꾸려면 아래 h1/p, 각 rule-card의 h3/p만 수정하면 됩니다.
+         카드를 더 추가하고 싶다면 <div class="rule-card c3">...</div> 블록을
+         통째로 복사해서 붙여넣으면 자동으로 2x2 다음 칸에 배치됩니다.
+         ================================================================= -->
+    <section id="tab-rules" class="tab-panel active">
+      <div class="hero">
+        <h1>컴퓨터실, 이렇게 사용해요!</h1>
+        <p>즐겁고 안전한 정보 수업을 위해 아래 약속을 꼭 지켜주세요.</p>
+      </div>
+
+      <div class="rule-grid">
+        <div class="rule-card c1">
+          <div class="icon">🧴</div>
+          <h3>손소독제 or 손씻기</h3>
+          <p>컴퓨터실에 들어오기 전, 손소독제를 바르거나 손을 깨끗이 씻고 들어와요.</p>
+        </div>
+        <div class="rule-card c2">
+          <div class="icon">🪑</div>
+          <h3>자기 자리 앉기</h3>
+          <p>선생님이 배정해주신 내 자리에 앉아요. 다른 친구 자리에 앉지 않아요.</p>
+        </div>
+        <div class="rule-card c3">
+          <div class="icon">🚫🍪</div>
+          <h3>간식 가져오지 않기</h3>
+          <p>컴퓨터실에는 과자, 음료 등 간식을 가지고 들어오지 않아요.</p>
+        </div>
+        <div class="rule-card c3">
+          <div class="icon">🪑🚫</div>
+          <h3>의자 이동 X</h3>
+          <p>의자 바퀴가 자꾸 빠져요. 의자를 끌거나 옮기지 말고 제자리에서 사용해요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         [탭 1.5] 시간표 (NEIS 나이스 교육정보 개방포털 중학교시간표 API)
+         [수정 27] 학년/반 목록을 바꾸려면 아래 <select id="ttGradeSelect">/
+         <select id="ttClassSelect"> 안의 <option>들을 편집하세요. 학교가
+         바뀌면 아래쪽 <script> 안의 TT_CONFIG를 새 학교 값으로 바꿔주세요.
+         ================================================================= -->
+    <section id="tab-timetable" class="tab-panel">
+      <div class="hero">
+        <h1>우리 반 시간표 🗓️</h1>
+        <div class="tt-note">⚠️ '동아리활동'은 <span class="tt-note-hl tt-note-hl-a">동아리 시간</span>일 수도 있고 <span class="tt-note-hl tt-note-hl-b">학스 시간</span>일 수도 있어요.</div>
+      </div>
+
+      <div class="meal-card">
+        <div class="tt-select-row no-print">
+          <label>학년
+            <select id="ttGradeSelect" aria-label="학년 선택">
+              <option value="1">1학년</option>
+              <option value="2" selected>2학년</option>
+              <option value="3">3학년</option>
+            </select>
+          </label>
+          <label>반
+            <select id="ttClassSelect" aria-label="반 선택">
+              <option value="1" selected>1반</option>
+              <option value="2">2반</option>
+              <option value="3">3반</option>
+              <option value="4">4반</option>
+              <option value="5">5반</option>
+              <option value="6">6반</option>
+              <option value="7">7반</option>
+              <option value="8">8반</option>
+              <option value="9">9반</option>
+              <option value="10">10반</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="meal-view-switch no-print">
+          <button type="button" class="meal-view-btn active" id="ttViewDayBtn" data-view="day">일간</button>
+          <button type="button" class="meal-view-btn" id="ttViewWeekBtn" data-view="week">주간</button>
+          <button type="button" class="meal-view-btn" id="ttViewMonthBtn" data-view="month">월간</button>
+        </div>
+        <div class="meal-nav">
+          <button type="button" class="meal-nav-btn no-print" id="ttPrevBtn" aria-label="이전 시간표 보기">◀</button>
+          <div class="meal-date" id="ttDateLabel">불러오는 중...</div>
+          <button type="button" class="meal-nav-btn no-print" id="ttNextBtn" aria-label="다음 시간표 보기">▶</button>
+        </div>
+        <div class="meal-today-row no-print">
+          <button type="button" class="meal-today-btn" id="ttTodayBtn">오늘로 이동</button>
+        </div>
+
+        <!-- 일간 보기 -->
+        <div class="tt-content" id="ttContent">
+          <p class="meal-status">시간표를 불러오는 중이에요...</p>
+        </div>
+
+        <!-- 주간 보기: 월~금 5칸. 칸을 클릭하면 그 날짜의 일간 보기로 이동합니다. -->
+        <div class="meal-week-wrap" id="ttWeekWrap" style="display:none;">
+          <div class="meal-week-grid" id="ttWeekContent"></div>
+        </div>
+
+        <!-- 월간 보기: 달력 형태. 칸을 클릭하면 그 날짜의 일간 보기로 이동합니다. -->
+        <div class="meal-month-view" id="ttMonthView" style="display:none;">
+          <div class="meal-month-weekdays">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="meal-month-grid" id="ttMonthContent"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         [탭 2] 오늘의 급식 (NEIS 나이스 교육정보 개방포털 API)
+         [수정 22] 학교가 바뀌면 아래쪽 <script> 안의 NEIS_CONFIG에 있는
+         ATPT_OFCDC_SC_CODE(시도교육청코드) / SD_SCHUL_CODE(행정표준코드) /
+         KEY(인증키)를 새 학교 값으로 바꿔주세요.
+         ================================================================= -->
+    <section id="tab-meal" class="tab-panel">
+      <div class="hero">
+        <h1>오늘은 뭐 먹을까? 🍽️</h1>
+      </div>
+
+      <div class="meal-card">
+        <!-- [수정 25] 일간/주간/월간 보기 전환 버튼. 눌리면 JS의 switchView()가
+             mealContent(일간) / mealWeekWrap(주간) / mealMonthView(월간) 중
+             하나만 보여주고 나머지는 숨깁니다. -->
+        <div class="meal-view-switch no-print">
+          <button type="button" class="meal-view-btn active" id="mealViewDayBtn" data-view="day">일간</button>
+          <button type="button" class="meal-view-btn" id="mealViewWeekBtn" data-view="week">주간</button>
+          <button type="button" class="meal-view-btn" id="mealViewMonthBtn" data-view="month">월간</button>
+        </div>
+        <div class="meal-nav">
+          <button type="button" class="meal-nav-btn no-print" id="mealPrevBtn" aria-label="이전 급식 보기">◀</button>
+          <div class="meal-date" id="mealDateLabel">불러오는 중...</div>
+          <button type="button" class="meal-nav-btn no-print" id="mealNextBtn" aria-label="다음 급식 보기">▶</button>
+        </div>
+        <div class="meal-today-row no-print">
+          <button type="button" class="meal-today-btn" id="mealTodayBtn">오늘로 이동</button>
+        </div>
+
+        <!-- 일간 보기 (기존 그대로) -->
+        <div class="meal-content" id="mealContent">
+          <p class="meal-status">급식 정보를 불러오는 중이에요...</p>
+        </div>
+
+        <!-- 주간 보기: 월~금 5칸. 칸을 클릭하면 그 날짜의 일간 보기로 이동합니다. -->
+        <div class="meal-week-wrap" id="mealWeekWrap" style="display:none;">
+          <div class="meal-week-grid" id="mealWeekContent"></div>
+        </div>
+
+        <!-- 월간 보기: 달력 형태. 칸을 클릭하면 그 날짜의 일간 보기로 이동합니다. -->
+        <div class="meal-month-view" id="mealMonthView" style="display:none;">
+          <div class="meal-month-weekdays">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="meal-month-grid" id="mealMonthContent"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         [탭 3] 학습지: 1. 컴퓨팅 시스템 (첨부 PDF 기반 빈칸 채우기)
+         학생이 input에 입력한 내용은 맨 아래 "PDF로 저장하기" 버튼을
+         누르면 인쇄(저장) 결과물에 그대로 함께 출력됩니다.
+         ================================================================= -->
+    <section id="tab-worksheet" class="tab-panel">
+      <div class="sheet">
+
+        <div class="sheet-header">
+          <h2>디지털 데이터</h2>
+          <div class="id-fields">
+            <span>2학년</span>
+            <input type="text" class="blank" placeholder="반" aria-label="반">
+            <span>반</span>
+            <input type="text" class="blank" placeholder="번호" aria-label="번호">
+            <span>번</span>
+            <span>이름:</span>
+            <input type="text" class="blank name" placeholder="이름" aria-label="이름">
+          </div>
+        </div>
+
+        <!-- =============================================================
+             [수정 10] 임시 저장(자동 저장) 표시줄
+             학생이 입력할 때마다 브라우저(이 컴퓨터)에 자동으로 저장되고,
+             페이지를 새로고침하거나 다시 열어도 내용이 이어집니다.
+             컴퓨터실은 여러 학생이 같은 컴퓨터를 돌아가며 쓰므로, PDF
+             저장을 완료하면 자동으로 지워집니다(JS의 [수정 10-2] 참고).
+             ============================================================= -->
+        <div class="autosave-bar no-print">
+          <span id="autosaveStatus" class="autosave-status"></span>
+        </div>
+
+        <!-- [수정 11] 진행률 표시줄 (화면 전용, PDF에는 안 나옴) -->
+        <div class="progress-row no-print">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <span class="progress-label" id="progressLabel">0 / 0칸 완료</span>
+        </div>
+
+<!-- =============================================================
+             학습지 안내 박스 3종 (콜아웃)
+             [수정 16] 색이 다른 안내 상자 3가지를 재사용할 수 있게
+             만들었습니다. 공통 스타일은 .callout이고, 종류별로
+             .callout--goal(파랑, 목표) / .callout--tip(초록, 팁) /
+             .callout--gemini(보라, 제미나이 활동)를 덧붙여서 색만
+             다르게 씁니다. 안내 상자를 더 넣고 싶으면 이 블록 중
+             하나를 통째로 복사해서 문구만 바꾸면 됩니다.
+             ============================================================= -->
+        <div class="callout callout--gemini">
+          <h4>🤖 이 학습지는 이렇게 써요</h4>
+          <p>이 학습지에는 인터넷 검색 활동뿐 아니라, AI 챗봇 '제미나이(Gemini)'에게 직접 물어보는 활동도 있어요. <b style="color:var(--color-magenta);">보라색 상자</b>가 나오면 Gemini에 들어가서 질문을 입력하고, 돌아온 답을 내 말로 짧게 정리해 보세요.</p>
+        </div>
+
+        <div class="callout callout--tip">
+          <h4>🗨️ Tip</h4>
+          <p>제미나이에게 물어볼 때는 '~을 쉬운 말로 설명해줘', '~을 예를 들어서 설명해줘'처럼 자세히 물어보면 더 쉬운 답을 받을 수 있어요. 답이 너무 어려우면 '더 쉽게 설명해줘' 라고 다시 물어보세요!</p>
+        </div>
+
+        <div class="callout callout--goal">
+          <h3>🎯 오늘의 목표</h3>
+          <ol class="callout-list">
+            <li>파일 확장자가 무엇인지 알아보기</li>
+            <li>디지털 데이터를 정리할 때 쓰는, 엑셀이 무엇인지 알아보기</li>
+          </ol>
+        </div>
+
+        <!-- ▼▼▼ ACTIVITY-CONTENT-START ▼▼▼
+             새 활동지를 요청할 때는 "이 주석과 ACTIVITY-CONTENT-END 주석
+             사이만 새로 채워줘"라고 하면 됩니다. 이 두 줄(마커) 자체는
+             지우지 말고 항상 남겨 두세요 — 다음 수정 때도 같은 위치를
+             정확히 찾는 기준이 됩니다. -->
+
+        <!-- =============================================================
+             MISSION 1 — 유튜브 쇼츠 크리에이터의 파일 창고
+             (자료: data2.docx)
+             ============================================================= -->
+        <!-- [수정 38] 색상 헤더 바 스타일로 바뀌면서 카드에 테두리·배경이
+             생겨 위 .callout--goal과의 마진 겹침(collapse) 문제가 더 이상
+             없어져서, [수정 27]의 padding-top 보정은 지웠습니다. -->
+        <div class="section-block mission-color-1">
+          <h3><span class="badge">🎬</span>MISSION 1 — 유튜브 쇼츠 크리에이터의 파일 창고</h3>
+          <p class="hint">📢 너는 이번 주말까지 쇼츠(Shorts) 영상을 완성해서 올려야 하는 크리에이터야! 노트북 폴더를 열어보니 촬영본, 대본, 음악, 썸네일까지 파일이 잔뜩 있어. 확장자의 정체를 알아야 제대로 편집할 수 있어!</p>
+
+          <p class="fill-line"><b>① 나의 쇼츠 프로젝트 폴더를 정리해 보자!</b> 아래 이름표를 각 파일에 어울리는 확장자 칸과 데이터 종류 칸으로 드래그해서 놓아보세요. 터치 기기라면 이름표를 한 번 클릭한 뒤, 놓고 싶은 칸을 클릭해도 됩니다.</p>
+          <p class="hint" style="margin-top:-2px;">💡 표의 각 줄에서, 가운데 칸에는 확장자를, 오른쪽 칸에는 데이터 종류를 놓아주세요.</p>
+          <p class="hint" style="margin-top:-2px;">💡 다 놓았으면 '✅ 정답 확인' 버튼을 눌러 채점해 보세요. '🔀 다시 섞기'를 누르면 처음부터 다시 풀 수 있어요.</p>
+          <button type="button" class="dnd-reset-btn no-print" data-target-tray="dndTray1" data-result-id="dndResult1">🔀 다시 섞기</button>
+          <button type="button" class="dnd-check-btn no-print" data-target-tray="dndTray1" data-result-id="dndResult1">✅ 정답 확인</button>
+          <span class="dnd-check-result no-print" id="dndResult1"></span>
+          <div class="dnd-tray" id="dndTray1">
+            <div class="dnd-chip" draggable="true" data-value="확장자-txt" data-answer-key="ext-txt" tabindex="0">.txt</div>
+            <div class="dnd-chip" draggable="true" data-value="확장자-mp4" data-answer-key="ext-mp4" tabindex="0">.mp4</div>
+            <div class="dnd-chip" draggable="true" data-value="확장자-mp3" data-answer-key="ext-mp3" tabindex="0">.mp3</div>
+            <div class="dnd-chip" draggable="true" data-value="확장자-jpg" data-answer-key="ext-jpg" tabindex="0">.jpg</div>
+            <div class="dnd-chip" draggable="true" data-value="확장자-mov" data-answer-key="ext-mov" tabindex="0">.mov</div>
+            <div class="dnd-chip" draggable="true" data-value="종류-문자숫자" data-answer-key="type-문자숫자" tabindex="0">문자와 숫자 데이터</div>
+            <div class="dnd-chip" draggable="true" data-value="종류-동영상-1" data-answer-key="type-동영상" tabindex="0">동영상 데이터</div>
+            <div class="dnd-chip" draggable="true" data-value="종류-소리" data-answer-key="type-소리" tabindex="0">소리 데이터</div>
+            <div class="dnd-chip" draggable="true" data-value="종류-이미지" data-answer-key="type-이미지" tabindex="0">이미지 데이터</div>
+            <div class="dnd-chip" draggable="true" data-value="종류-동영상-2" data-answer-key="type-동영상" tabindex="0">동영상 데이터</div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="sheet-table sheet-table--centered">
+              <thead><tr><th>파일 이름</th><th>파일 확장자</th><th>데이터 종류</th></tr></thead>
+              <tbody>
+                <tr><td>📄 대본_최종.txt</td><td><div class="dnd-slot" data-slot="파일확장자-대본" data-check-group="dndTray1" data-answer="ext-txt"></div></td><td><div class="dnd-slot" data-slot="파일종류-대본" data-check-group="dndTray1" data-answer="type-문자숫자"></div></td></tr>
+                <tr><td>🎥 촬영원본.mp4</td><td><div class="dnd-slot" data-slot="파일확장자-촬영원본" data-check-group="dndTray1" data-answer="ext-mp4"></div></td><td><div class="dnd-slot" data-slot="파일종류-촬영원본" data-check-group="dndTray1" data-answer="type-동영상"></div></td></tr>
+                <tr><td>🎵 배경음악_신남.mp3</td><td><div class="dnd-slot" data-slot="파일확장자-배경음악" data-check-group="dndTray1" data-answer="ext-mp3"></div></td><td><div class="dnd-slot" data-slot="파일종류-배경음악" data-check-group="dndTray1" data-answer="type-소리"></div></td></tr>
+                <tr><td>🖼 썸네일_시안1.jpg</td><td><div class="dnd-slot" data-slot="파일확장자-썸네일" data-check-group="dndTray1" data-answer="ext-jpg"></div></td><td><div class="dnd-slot" data-slot="파일종류-썸네일" data-check-group="dndTray1" data-answer="type-이미지"></div></td></tr>
+                <tr><td>🎬 편집완성본.mov</td><td><div class="dnd-slot" data-slot="파일확장자-편집완성본" data-check-group="dndTray1" data-answer="ext-mov"></div></td><td><div class="dnd-slot" data-slot="파일종류-편집완성본" data-check-group="dndTray1" data-answer="type-동영상"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="fill-line" style="margin-top: var(--space-md);"><b>② 폴더 정리함 만들기</b>: 아래 정리함 이름표를 각 확장자에 어울리는 칸으로 드래그해서 분류해 보자.</p>
+          <p class="hint" style="margin-top:-2px;">💡 다 놓았으면 '✅ 정답 확인' 버튼을 눌러 채점해 보세요. '🔀 다시 섞기'를 누르면 처음부터 다시 풀 수 있어요.</p>
+          <button type="button" class="dnd-reset-btn no-print" data-target-tray="dndTray2" data-result-id="dndResult2">🔀 다시 섞기</button>
+          <button type="button" class="dnd-check-btn no-print" data-target-tray="dndTray2" data-result-id="dndResult2">✅ 정답 확인</button>
+          <span class="dnd-check-result no-print" id="dndResult2"></span>
+          <div class="dnd-tray" id="dndTray2">
+            <div class="dnd-chip" draggable="true" data-value="정리함-문서함-1" data-answer-key="bin-문서함" tabindex="0">📄 문서함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-문서함-2" data-answer-key="bin-문서함" tabindex="0">📄 문서함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-이미지함-1" data-answer-key="bin-이미지함" tabindex="0">🖼 이미지함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-이미지함-2" data-answer-key="bin-이미지함" tabindex="0">🖼 이미지함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-이미지함-3" data-answer-key="bin-이미지함" tabindex="0">🖼 이미지함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-음악함-1" data-answer-key="bin-음악함" tabindex="0">🎵 음악함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-음악함-2" data-answer-key="bin-음악함" tabindex="0">🎵 음악함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-영상함-1" data-answer-key="bin-영상함" tabindex="0">🎬 영상함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-영상함-2" data-answer-key="bin-영상함" tabindex="0">🎬 영상함</div>
+            <div class="dnd-chip" draggable="true" data-value="정리함-영상함-3" data-answer-key="bin-영상함" tabindex="0">🎬 영상함</div>
+          </div>
+
+          <div class="dnd-grid-2col">
+            <div class="dnd-row dnd-row--center"><p>.txt</p><div class="dnd-slot" data-slot="확장자분류-txt" data-check-group="dndTray2" data-answer="bin-문서함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.pdf</p><div class="dnd-slot" data-slot="확장자분류-pdf" data-check-group="dndTray2" data-answer="bin-문서함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.jpg</p><div class="dnd-slot" data-slot="확장자분류-jpg" data-check-group="dndTray2" data-answer="bin-이미지함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.png</p><div class="dnd-slot" data-slot="확장자분류-png" data-check-group="dndTray2" data-answer="bin-이미지함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.gif</p><div class="dnd-slot" data-slot="확장자분류-gif" data-check-group="dndTray2" data-answer="bin-이미지함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.mp3</p><div class="dnd-slot" data-slot="확장자분류-mp3" data-check-group="dndTray2" data-answer="bin-음악함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.wav</p><div class="dnd-slot" data-slot="확장자분류-wav" data-check-group="dndTray2" data-answer="bin-음악함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.mp4</p><div class="dnd-slot" data-slot="확장자분류-mp4" data-check-group="dndTray2" data-answer="bin-영상함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.avi</p><div class="dnd-slot" data-slot="확장자분류-avi" data-check-group="dndTray2" data-answer="bin-영상함"></div></div>
+            <div class="dnd-row dnd-row--center"><p>.mov</p><div class="dnd-slot" data-slot="확장자분류-mov" data-check-group="dndTray2" data-answer="bin-영상함"></div></div>
+          </div>
+        </div>
+
+        <!-- =============================================================
+             MISSION 2 — 내 생활 속 확장자 찾기 (자료: data2_1.docx)
+             ============================================================= -->
+        <div class="section-block mission-color-2">
+          <h3><span class="badge">🎬</span>MISSION 2 — 내 생활 속 확장자 찾기</h3>
+          <p class="hint">📢 인터넷과 스마트폰을 하게 되면 나도 모르게 여러 파일을 만들게 돼요. 어떤 확장자로 저장될지 예상해보자!</p>
+
+          <p class="fill-line"><b>아래 상황에서 만들어지는 파일은 어떤 확장자를 가질지 예상해서 적고, 검색해서 확인해 보자.</b></p>
+          <div class="table-scroll">
+            <table class="sheet-table">
+              <thead><tr><th>상황</th><th>파일 확장자</th></tr></thead>
+              <tbody>
+                <tr><td>유튜브의 특정 장면을 스크린샷으로 캡처해서 저장했다</td><td><input type="text" class="blank wide" aria-label="생활확장자-스크린샷" placeholder="답을 적어보세요"></td></tr>
+                <tr><td>발로란트 게임을 하던 중, 내가 플레이하는 모습을 화면 녹화해서 저장했다</td><td><input type="text" class="blank wide" aria-label="생활확장자-화면녹화" placeholder="답을 적어보세요"></td></tr>
+                <tr><td>포켓로그 공략법을 메모장에 정리해서 저장했다</td><td><input type="text" class="blank wide" aria-label="생활확장자-메모장" placeholder="답을 적어보세요"></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout--tip">
+            <h4>💡 Tip</h4>
+            <p>답을 잘 모르겠으면, 제미나이에게 물어보세요! 예) "유튜브의 특정 장면을 스크린샷으로 캡쳐해서 저장했는데, 이 때 파일 확장자가 어떤 걸로 저장돼?"</p>
+          </div>
+        </div>
+
+        <!-- =============================================================
+             MISSION 3 — .exe 파일이 뭘까? (자료: data2_1.docx)
+             ============================================================= -->
+        <div class="section-block mission-color-3">
+          <h3><span class="badge">🔍</span>MISSION 3 — .exe 파일이 뭘까?</h3>
+          <p class="hint">📢 확장자 중에는 조금 특별한 친구가 있어요. 바로 .exe! 어떤 파일인지 알아보자.</p>
+
+          <p class="fill-line"><b>exe 파일이 무엇인지, 제미나이에게 직접 물어보고 답을 정리해 보자.</b></p>
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "exe 파일이 무엇인지, 비유를 들어서 쉽게 설명해줘."</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-exe설명" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "게임 중에서 exe 파일 예시 알려줘"</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-exe예시" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+
+          <div class="callout callout--tip">
+            <h4>💡 알고 있었나요?</h4>
+            <p>발로란트 같은 PC 게임을 실행할 때도, 사실은 게임 폴더 안에 있는 'VALORANT-Win64-Shipping.exe' 같은 파일이 실행되는 거예요! exe 파일 안에는 컴퓨터가 실행할 수 있는 명령어(코드)가 들어있어서, 더블클릭하면 프로그램이나 게임이 켜져요.</p>
+          </div>
+
+          <p class="fill-line"><b>🌶️ 미니 퀴즈: 발로란트가 실행될까?</b></p>
+          <p class="hint" style="margin-top:-2px;">발로란트 실행 파일의 확장자를 'VALORANT-Win64-Shipping.exe'에서 'VALORANT-Win64-Shipping.gif'로 바꿔버렸다! 이 상태로 더블클릭하면 발로란트 게임이 실행될까? (먼저 생각해보고, 검색해보세요!)</p>
+          <p class="hint" style="margin-top:-2px;">🙋 나의 선택은?</p>
+          <div class="choice-card-row" style="flex-direction:column; align-items:stretch;">
+            <button type="button" class="choice-card" data-item="발로란트퀴즈-실행됨" data-group="발로란트퀴즈" style="width:100%; text-align:left;"><span class="check">✅</span>실행된다 — 왜냐하면 발로란트를 구성하고 있는 다른 파일들은 그대로 있으니까</button>
+            <button type="button" class="choice-card" data-item="발로란트퀴즈-실행안됨" data-group="발로란트퀴즈" style="width:100%; text-align:left;"><span class="check">✅</span>실행되지 않는다 — 왜냐하면 확장자가 바뀌었으니까</button>
+          </div>
+          <button type="button" class="choice-check-btn no-print" data-group="발로란트퀴즈" data-correct="발로란트퀴즈-실행안됨" data-result-id="miniQuizResult1">✅ 정답 확인</button>
+          <span class="dnd-check-result no-print" id="miniQuizResult1"></span>
+        </div>
+
+        <!-- =============================================================
+             MISSION 4 — 유튜버가 되려면? (자료: data2_1.docx)
+             ============================================================= -->
+        <div class="section-block mission-color-4">
+          <h3><span class="badge">🔍</span>MISSION 4 — 유튜버가 되려면?</h3>
+          <p class="hint">📢 유튜버가 되려면 영상 편집이 필요하다. 준비물은 무엇이 있을까?</p>
+
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "나는 [게임 / 댄스 / 일상 브이로그 / 공부]를 주제로 채널을 운영하는 유튜버로 데뷔하려고 해. 너는 이제부터 날 도와주는 매니저야. 구독자들의 눈길을 사로잡을 만한 신선하고 재미있는 채널 이름 3개랑 첫 영상 아이디어를 추천해 줘."</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-채널이름" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "영상을 만들어서 유튜브에 올리려면 어떤 파일들이 필요해? 유튜브 영상 제작에 쓰이는 동영상, 이미지, 음성, 자막의 주요 파일 확장자 종류와 특징을 한눈에 볼 수 있게 표로 정리해 줘."</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-파일표" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "요즘 유튜버들이 영상 편집할 때 쓰는 프로그램은 뭐야?"</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-편집프로그램" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+          <div class="callout callout--gemini">
+            <h4>🤖 제미나이에게 물어보기</h4>
+            <p class="example-q">질문 예시: "동영상 화질은 좋지만 용량이 큰 확장자와, 동영상 용량은 적당하면서 유튜브에 올리기 제일 좋은 확장자는 각각 뭐야?"</p>
+            <p class="callout-label">제미나이 답변 요약 ▸</p>
+            <textarea class="blank" aria-label="제미나이요약-확장자비교" rows="2" placeholder="Gemini가 알려준 내용을 내 말로 짧게 정리해보세요"></textarea>
+          </div>
+        </div>
+
+        <!-- =============================================================
+             MISSION 5 — 형성평가: 오늘의 실력 점검 (자료: data2_1.docx)
+             ============================================================= -->
+        <div class="section-block mission-color-5">
+          <h3><span class="badge">🔍</span>MISSION 5 — 형성평가: 오늘의 실력 점검</h3>
+          <p class="hint">📢 오늘 배운 내용을 잘 이해했는지 스스로 확인해보자!</p>
+          <p class="hint" style="margin-top:-2px;">💡 O 또는 X 버튼을 눌러 골라보세요. 다 고르고 나면 '✅ 정답 확인' 버튼을 눌러 채점하고, '🔀 다시 풀기'를 누르면 처음부터 다시 풀 수 있어요.</p>
+          <button type="button" class="ox-reset-btn no-print" data-result-id="oxResult5">🔀 다시 풀기</button>
+          <button type="button" class="ox-check-btn no-print" data-result-id="oxResult5">✅ 정답 확인</button>
+          <span class="dnd-check-result no-print" id="oxResult5"></span>
+
+          <div class="ox-quiz-item" data-ox-answer="O">
+            <p>1. 파일 확장자는 파일 이름 뒤에 점(.)을 찍고 붙는 글자들이다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가1" data-item="형성평가1-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가1" data-item="형성평가1-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="O">
+            <p>2. .jpg, .png는 이미지 파일의 확장자이다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가2" data-item="형성평가2-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가2" data-item="형성평가2-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="X">
+            <p>3. .mp3, .wav는 동영상 파일의 확장자이다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가3" data-item="형성평가3-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가3" data-item="형성평가3-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="O">
+            <p>4. .mp4, .avi는 동영상 파일의 확장자이다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가4" data-item="형성평가4-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가4" data-item="형성평가4-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="O">
+            <p>5. 화면을 캡처해서 저장한 파일은 보통 이미지 파일 확장자를 가진다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가5" data-item="형성평가5-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가5" data-item="형성평가5-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="X">
+            <p>6. 파일 이름의 확장자만 바꾸면 파일의 실제 종류도 바뀐다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가6" data-item="형성평가6-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가6" data-item="형성평가6-X" data-value="X">X</button>
+            </div>
+          </div>
+          <div class="ox-quiz-item" data-ox-answer="O">
+            <p>7. .exe 파일은 컴퓨터에서 실행되는 프로그램 파일이다.</p>
+            <div class="ox-choice-row">
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가7" data-item="형성평가7-O" data-value="O">O</button>
+              <button type="button" class="choice-card choice-card--ox" data-group="형성평가7" data-item="형성평가7-X" data-value="X">X</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ▲▲▲ ACTIVITY-CONTENT-END ▲▲▲ -->
+
+        <!-- =============================================================
+             PDF로 저장하기 버튼
+             [수정 3] 버튼을 누르면 별도 인쇄창 없이 바로 학습지가
+             PDF 파일로 다운로드됩니다 (html2canvas + jsPDF 라이브러리 사용,
+             동작 원리는 이 파일 맨 아래 JS의 [수정 3] 주석 참고).
+             ============================================================= -->
+        <div class="save-bar no-print">
+          <button id="saveBtn" class="btn-green" type="button">📄 활동지 PDF로 저장하기</button>
+        </div>
+        <p class="save-note no-print">버튼을 누르면 입력한 내용이 그대로 담긴 PDF 파일이 바로 다운로드돼요.</p>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer no-print">정보 교과 · 컴퓨터실 이용 안내 &amp; 활동지</footer>
+</div>
+
+<script>
+  // =========================================================================
+  // [수정 27] "시간표" 탭 — NEIS(나이스 교육정보 개방포털) 중학교시간표
+  // Open API(misTimetable)를 이 파일 안에서 학생 브라우저가 직접 fetch로
+  // 호출해 보여줍니다. 학년/반은 위쪽 <select id="ttGradeSelect">/
+  // <select id="ttClassSelect">에서 고른 값을 그대로 요청 파라미터로 씁니다.
+  //
+  // 학교가 바뀌거나 인증키를 재발급 받았다면 아래 세 값만 바꾸면 됩니다.
+  //   - KEY                : NEIS Open API 인증키
+  //   - ATPT_OFCDC_SC_CODE : 시도교육청코드
+  //   - SD_SCHUL_CODE      : 행정표준코드(학교코드)
+  // =========================================================================
+  (function () {
+    var TT_CONFIG = {
+      KEY: '2330708489cd40acb121687ba369a283',
+      ATPT_OFCDC_SC_CODE: 'J10',
+      SD_SCHUL_CODE: '7692151'
+    };
+
+    var gradeSelect = document.getElementById('ttGradeSelect');
+    var classSelect = document.getElementById('ttClassSelect');
+    var dateLabelEl = document.getElementById('ttDateLabel');
+    var contentEl = document.getElementById('ttContent');
+    var prevBtn = document.getElementById('ttPrevBtn');
+    var nextBtn = document.getElementById('ttNextBtn');
+    var todayBtn = document.getElementById('ttTodayBtn');
+
+    var viewDayBtn = document.getElementById('ttViewDayBtn');
+    var viewWeekBtn = document.getElementById('ttViewWeekBtn');
+    var viewMonthBtn = document.getElementById('ttViewMonthBtn');
+    var weekWrapEl = document.getElementById('ttWeekWrap');
+    var weekContentEl = document.getElementById('ttWeekContent');
+    var monthViewEl = document.getElementById('ttMonthView');
+    var monthContentEl = document.getElementById('ttMonthContent');
+
+    // 이 탭 자체가 없는 페이지에서 재사용될 때도 에러 없이 넘어가도록
+    if (!dateLabelEl || !contentEl || !gradeSelect || !classSelect || !prevBtn || !nextBtn || !todayBtn) return;
+
+    var currentDate = new Date();
+    var viewMode = 'day'; // 'day' | 'week' | 'month'
+    var weekRequestSeq = 0;
+    var monthRequestSeq = 0;
+    // 일간 보기에서 마지막으로 불러온 교시 목록 — 페이지를 계속 켜둔 채로도
+    // 완료/진행중/예정 표시가 실시간으로 따라가도록 아래쪽 setInterval에서 씁니다.
+    var lastDayRows = null;
+    var lastDayDate = null;
+
+    // [수정 28] 교시별 시작~종료 시각 (학교 시간표가 바뀌면 이 값만 고치면
+    // 됩니다). 여기 없는 교시는 시간 표시 없이 과목명만 보여줍니다.
+    var PERIOD_TIMES = {
+      '1': { start: '09:00', end: '09:45' },
+      '2': { start: '09:55', end: '10:40' },
+      '3': { start: '10:50', end: '11:35' },
+      '4': { start: '11:45', end: '12:35' },
+      '5': { start: '13:35', end: '14:20' },
+      '6': { start: '14:30', end: '15:15' },
+      '7': { start: '15:25', end: '16:10' }
+    };
+
+    // [수정 33] 과목별 글자색 — 요청하신 19색을 과목마다 서로 겹치지 않게
+    // 하나씩 고정으로 배정했습니다. 지금까지 이 학교 시간표에 실제로 나온
+    // 과목 16개(정보 포함) 전부 다른 색이에요. 학교/학년이 바뀌어서 여기
+    // 없는 새 과목이 나오면, 위 16개와 절대 안 겹치도록 따로 남겨둔 3가지
+    // 색(SUBJECT_COLOR_FALLBACK_POOL) 중 하나를 이름 기준으로 항상 같은
+    // 색으로 배정합니다. 새 과목을 추가하려면 여기 표에 한 줄만 더 넣으면
+    // 됩니다 — 나머지 19색 중 아직 안 쓴 색인지만 확인해주세요.
+    var SUBJECT_COLOR_OVERRIDES = {
+      '정보':          'rgb(127, 19, 236)',  // 1. 울트라 바이올렛 (시그니처) #7F13EC
+      '국어':          'rgb(136, 19, 55)',   // 19. 딥 버건디 #881337
+      '수학':          'rgb(2, 132, 199)',   // 10. 마린 블루 #0284C7
+      '영어':          'rgb(194, 65, 12)',   // 18. 딥 오렌지 #C2410C
+      '과학':          'rgb(6, 182, 212)',   // 9. 시안 아쿠아 #06B6D4
+      '역사':          'rgb(101, 163, 13)',  // 7. 올리브 딥 라임 #65A30D
+      '도덕':          'rgb(109, 40, 217)',  // 11. 비비드 퍼플 딥 #6D28D9
+      '체육':          'rgb(217, 119, 6)',   // 6. 브라이트 마인드 #D97706
+      '음악':          'rgb(16, 86, 236)',   // 3. 코발트 블루 #1056EC
+      '미술':          'rgb(217, 56, 30)',   // 4. 비비드 브릭 #D9381E
+      '기술·가정':      'rgb(162, 28, 175)',  // 13. 딥 마젠타 와인 #A21CAF
+      '동아리활동':     'rgb(30, 64, 175)',   // 14. 네이비 인디고 #1E40AF
+      '진로활동':       'rgb(249, 115, 22)',  // 5. 탠저린 오렌지 #F97316
+      '자율·자치활동':   'rgb(15, 150, 72)',   // 15. 브라이트 그린 #0F9648
+      '여름방학':       'rgb(236, 72, 153)',  // 12. 비비드 핫핑크 #EC4899
+      '토요휴업일':     'rgb(224, 30, 90)'    // 2. 푸시아 팝 #E01E5A
+    };
+    // 위 16개가 이미 쓴 색을 뺀 나머지 3가지 — 목록에 없는 과목에만 씁니다.
+    var SUBJECT_COLOR_FALLBACK_POOL = [
+      'rgb(22, 163, 74)',   // 8. 비비드 그린 #16A34A
+      'rgb(9, 145, 178)',   // 16. 브라이트 시안 #0991B2
+      'rgb(244, 63, 94)'    // 17. 브라이트 로즈 #F43F5E
+    ];
+    function subjectColor(name) {
+      if (!name) return null;
+      if (SUBJECT_COLOR_OVERRIDES[name]) return SUBJECT_COLOR_OVERRIDES[name];
+      var hash = 0;
+      for (var i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+      }
+      var idx = Math.abs(hash) % SUBJECT_COLOR_FALLBACK_POOL.length;
+      return SUBJECT_COLOR_FALLBACK_POOL[idx];
+    }
+
+    function formatNowTime(d) {
+      var hh = String(d.getHours()).padStart(2, '0');
+      var mm = String(d.getMinutes()).padStart(2, '0');
+      return hh + ':' + mm;
+    }
+
+    // "HH:MM" 문자열을 그날 0시부터 지난 분(分)으로 바꿔줍니다.
+    function timeToMinutes(hhmm) {
+      var parts = hhmm.split(':');
+      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    // [수정 30] 지금 시각이 PERIOD_TIMES의 어느 교시 안에 들어있는지
+    // 찾아줍니다. 쉬는 시간·방과후 등 어느 교시에도 안 걸리면 null.
+    function currentPeriodNumber() {
+      var now = new Date();
+      var nowMinutes = now.getHours() * 60 + now.getMinutes();
+      var found = null;
+      Object.keys(PERIOD_TIMES).forEach(function (p) {
+        var t = PERIOD_TIMES[p];
+        if (nowMinutes >= timeToMinutes(t.start) && nowMinutes < timeToMinutes(t.end)) {
+          found = p;
+        }
+      });
+      return found;
+    }
+
+    // 드롭다운에 없는 반 번호(예: 11반)가 나오면 옵션을 새로 만들어 끼워줍니다.
+    function ensureClassOption(selectEl, value) {
+      var exists = false;
+      for (var i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value === value) { exists = true; break; }
+      }
+      if (!exists) {
+        var opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value + '반';
+        selectEl.appendChild(opt);
+      }
+    }
+
+    // [수정 30] 페이지를 처음 열었을 때, 지금 이 시각에 "정보" 수업이 들어있는
+    // 반이 있는지 학교 전체 시간표에서 찾아줍니다(컴퓨터실 탭이니 지금 컴퓨터실을
+    // 쓰고 있을 반을 먼저 보여주기 위함). GRADE·CLASS_NM을 지정하지 않고
+    // 요청하면 학교 전체 반의 시간표가 한 번에 내려옵니다. 지금 교시 정보가
+    // 없거나(쉬는시간 등), 일치하는 반이 없거나, 요청이 실패하면 콜백에 null을
+    // 넘겨서 원래 기본값(2학년 1반)을 그대로 씁니다.
+    function findCurrentInfoClass(callback) {
+      var period = currentPeriodNumber();
+      if (!period) { callback(null); return; }
+
+      var today = new Date();
+      // [수정 32] 학교 전체 반을 한 번에 조회하면 하루치만도 100줄을 넘는
+      // 경우가 있어서(이 학교는 하루에 100줄이 넘습니다), 여기도 pSize를
+      // 넉넉히 지정합니다.
+      var url = 'https://open.neis.go.kr/hub/misTimetable'
+        + '?KEY=' + encodeURIComponent(TT_CONFIG.KEY)
+        + '&Type=json'
+        + '&pIndex=1'
+        + '&pSize=1000'
+        + '&ATPT_OFCDC_SC_CODE=' + encodeURIComponent(TT_CONFIG.ATPT_OFCDC_SC_CODE)
+        + '&SD_SCHUL_CODE=' + encodeURIComponent(TT_CONFIG.SD_SCHUL_CODE)
+        + '&AY=' + encodeURIComponent(schoolYear(today))
+        + '&ALL_TI_YMD=' + formatYmd(today);
+
+      fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var block = data && data.misTimetable;
+          var rows = (block && block[1] && block[1].row) || [];
+          var match = null;
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.PERIO === period && (row.ITRT_CNTNT || '').trim() === '정보') {
+              match = row;
+              break;
+            }
+          }
+          callback(match);
+        })
+        .catch(function () { callback(null); });
+    }
+
+    function formatYmd(d) {
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return '' + y + m + day;
+    }
+
+    function formatDisplay(d) {
+      var days = ['일', '월', '화', '수', '목', '금', '토'];
+      return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+    }
+
+    function addDays(d, n) {
+      var r = new Date(d);
+      r.setDate(r.getDate() + n);
+      return r;
+    }
+    function addMonths(d, n) {
+      return new Date(d.getFullYear(), d.getMonth() + n, 1);
+    }
+    function getMonday(d) {
+      var day = d.getDay();
+      var diff = (day === 0) ? -6 : (1 - day);
+      return addDays(d, diff);
+    }
+    function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+    function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0); }
+    function formatWeekLabel(monday, friday) {
+      var y = monday.getFullYear();
+      if (monday.getMonth() === friday.getMonth()) {
+        return y + '년 ' + (monday.getMonth() + 1) + '월 ' + monday.getDate() + '일 ~ ' + friday.getDate() + '일';
+      }
+      return y + '년 ' + (monday.getMonth() + 1) + '월 ' + monday.getDate() + '일 ~ '
+        + (friday.getMonth() + 1) + '월 ' + friday.getDate() + '일';
+    }
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    // 나이스 학년도(AY)는 3월에 시작해서 다음해 2월에 끝나므로, 1~2월은
+    // 전년도 학년도로 계산합니다.
+    function schoolYear(d) {
+      var y = d.getFullYear();
+      var m = d.getMonth() + 1;
+      return (m <= 2) ? (y - 1) : y;
+    }
+
+    function renderStatusIn(el, message, extraStyle) {
+      el.innerHTML = '';
+      var p = document.createElement('p');
+      p.className = 'meal-status';
+      if (extraStyle) { p.setAttribute('style', extraStyle); }
+      p.textContent = message;
+      el.appendChild(p);
+    }
+
+    function buildBaseUrl() {
+      // [수정 32] NEIS는 pSize를 안 주면 한 번에 최대 100줄까지만 내려주고
+      // 나머지는 조용히 잘라버립니다(에러 없이!). 한 달치(최대 31일 x 7교시,
+      // 중복 줄까지 감안하면 200줄 넘게 나올 수 있음)를 한 번에 받아오려면
+      // pSize를 넉넉히 지정해야 뒤쪽 날짜가 안 잘립니다.
+      return 'https://open.neis.go.kr/hub/misTimetable'
+        + '?KEY=' + encodeURIComponent(TT_CONFIG.KEY)
+        + '&Type=json'
+        + '&pIndex=1'
+        + '&pSize=1000'
+        + '&ATPT_OFCDC_SC_CODE=' + encodeURIComponent(TT_CONFIG.ATPT_OFCDC_SC_CODE)
+        + '&SD_SCHUL_CODE=' + encodeURIComponent(TT_CONFIG.SD_SCHUL_CODE)
+        + '&GRADE=' + encodeURIComponent(gradeSelect.value)
+        + '&CLASS_NM=' + encodeURIComponent(classSelect.value);
+    }
+
+    // [수정 29] NEIS 응답에 같은 교시(PERIO)가 두 줄로 들어있는 경우가
+    // 있습니다 (예: 과목명이 비어있는(null) 줄 하나 + 실제 과목이 채워진
+    // 줄 하나, 시간표 정정 이력이 같이 내려오는 걸로 보입니다). 과목명이
+    // 없는 빈 줄은 버리고, 교시마다 하나씩만 남깁니다. 그래도 같은 교시에
+    // 내용이 있는 줄이 여러 개면 더 자세한(글자 수가 더 많은) 쪽을 남깁니다.
+    function cleanRows(rows) {
+      var byPeriod = {};
+      rows.forEach(function (row) {
+        var p = row.PERIO;
+        if (!p) return;
+        var content = (row.ITRT_CNTNT || '').trim();
+        if (!content) return;
+        var existing = byPeriod[p];
+        if (!existing || content.length > (existing.ITRT_CNTNT || '').trim().length) {
+          byPeriod[p] = row;
+        }
+      });
+      return Object.keys(byPeriod).map(function (p) { return byPeriod[p]; });
+    }
+
+    // 교시(PERIO) 오름차순으로 정렬합니다.
+    function sortByPeriod(rows) {
+      return cleanRows(rows).sort(function (a, b) {
+        return (parseInt(a.PERIO, 10) || 0) - (parseInt(b.PERIO, 10) || 0);
+      });
+    }
+
+    // [수정 34] 수업이 없는 날 이름 목록 — 여기 들어있는 이름이면 교시가
+    // 하나만 내려와도(반복이 없어도) "n교시" 없이 이름만 보여줍니다. 필요한
+    // 이름이 더 있으면 이 배열에 추가하면 됩니다.
+    var NON_CLASS_DAY_LABELS = [
+      '토요휴업일', '여름방학', '겨울방학', '봄방학',
+      '제헌절', '현충일', '개교기념일', '재량휴업일',
+      '방학식', '개학식', '대체공휴일', '임시공휴일'
+    ];
+
+    // 토요휴업일·여름방학·제헌절·현충일·개교기념일처럼 수업이 없는 날은
+    // 보통 모든 교시가 똑같은 내용으로 반복해서 내려옵니다. 이런 날인지
+    // 판단합니다: (1) 교시가 2개 이상이고 전부 내용이 같거나, (2) 교시가
+    // 하나뿐이어도 위 NON_CLASS_DAY_LABELS 목록에 있는 이름이면 true.
+    function isWholeDayRows(sorted) {
+      if (!sorted.length) return false;
+      var first = (sorted[0].ITRT_CNTNT || '').trim();
+      if (!first) return false;
+      var allSame = sorted.every(function (row) {
+        return (row.ITRT_CNTNT || '').trim() === first;
+      });
+      if (!allSame) return false;
+      if (sorted.length >= 2) return true;
+      return NON_CLASS_DAY_LABELS.indexOf(first) !== -1;
+    }
+
+    // 위 판단 결과가 "수업 없는 날"이면, "n교시"를 반복하지 않고 이름
+    // 하나만 보여주는 li를 만들어줍니다.
+    function buildWholeDayLi(sorted) {
+      var li = document.createElement('li');
+      li.className = 'tt-period-row tt-period-row-wholeday';
+      var subj = document.createElement('span');
+      subj.className = 'tt-period-subject';
+      subj.textContent = sorted[0].ITRT_CNTNT || '-';
+      var subjColor = subjectColor(sorted[0].ITRT_CNTNT);
+      if (subjColor) { subj.style.color = subjColor; }
+      li.appendChild(subj);
+      return li;
+    }
+
+    // 교시 목록 UL을 만듭니다. 부모 컨테이너가 .tt-content(일간)냐
+    // .meal-week-day/.meal-month-cell(주간·월간)이냐에 따라 CSS가 자동으로
+    // 크기를 다르게 보여줘서, 이 함수 자체는 하나로 공용으로 씁니다.
+    function buildPeriodListEl(rows) {
+      var list = document.createElement('ul');
+      list.className = 'tt-period-list';
+      var sorted = sortByPeriod(rows);
+
+      if (isWholeDayRows(sorted)) {
+        list.appendChild(buildWholeDayLi(sorted));
+        return list;
+      }
+
+      sorted.forEach(function (row) {
+        var li = document.createElement('li');
+        li.className = 'tt-period-row';
+
+        var num = document.createElement('span');
+        num.className = 'tt-period-num';
+        num.textContent = row.PERIO + '교시';
+
+        var subj = document.createElement('span');
+        subj.className = 'tt-period-subject';
+        subj.textContent = row.ITRT_CNTNT || '-';
+        var subjColor = subjectColor(row.ITRT_CNTNT);
+        if (subjColor) { subj.style.color = subjColor; }
+
+        li.appendChild(num);
+        li.appendChild(subj);
+        list.appendChild(li);
+      });
+      return list;
+    }
+
+    // [수정 28] 일간 보기 전용 교시 목록 — 교시별 시작~종료 시각과, 오늘
+    // 날짜를 보고 있을 때만 완료/진행중/예정 배지·흐리게 표시·지금 교시
+    // 테두리 강조를 함께 보여줍니다. 주간·월간은 위쪽 buildPeriodListEl을
+    // 그대로 씁니다.
+    function buildDayPeriodListEl(rows, date) {
+      var list = document.createElement('ul');
+      list.className = 'tt-period-list';
+
+      var sorted = sortByPeriod(rows);
+      if (isWholeDayRows(sorted)) {
+        list.appendChild(buildWholeDayLi(sorted));
+        return list;
+      }
+
+      var isToday = isSameDay(date, new Date());
+      var nowMinutes = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : null;
+
+      sorted.forEach(function (row) {
+        var li = document.createElement('li');
+        li.className = 'tt-period-row';
+
+        var num = document.createElement('span');
+        num.className = 'tt-period-num';
+        num.textContent = row.PERIO + '교시';
+
+        var main = document.createElement('span');
+        main.className = 'tt-period-main';
+
+        var subj = document.createElement('span');
+        subj.className = 'tt-period-subject';
+        subj.textContent = row.ITRT_CNTNT || '-';
+        var subjColor = subjectColor(row.ITRT_CNTNT);
+        if (subjColor) { subj.style.color = subjColor; }
+        main.appendChild(subj);
+
+        var status = null;
+        var times = PERIOD_TIMES[row.PERIO];
+        if (times) {
+          var timeEl = document.createElement('span');
+          timeEl.className = 'tt-period-time';
+          timeEl.textContent = times.start + ' ~ ' + times.end;
+          main.appendChild(timeEl);
+
+          if (isToday) {
+            var startM = timeToMinutes(times.start);
+            var endM = timeToMinutes(times.end);
+            if (nowMinutes >= endM) { status = 'done'; }
+            else if (nowMinutes >= startM) { status = 'now'; }
+            else { status = 'upcoming'; }
+          }
+        }
+
+        li.appendChild(num);
+        li.appendChild(main);
+
+        if (status) {
+          var badge = document.createElement('span');
+          badge.className = 'tt-period-badge tt-badge-' + status;
+          badge.textContent = (status === 'done') ? '완료' : (status === 'now') ? '진행중' : '예정';
+          li.appendChild(badge);
+
+          if (status === 'done') { li.classList.add('is-done'); }
+          if (status === 'now') { li.classList.add('is-current'); }
+        }
+
+        list.appendChild(li);
+      });
+
+      return list;
+    }
+
+    function fetchTimetable(date) {
+      var isToday = isSameDay(date, new Date());
+      dateLabelEl.textContent = formatDisplay(date) + (isToday ? ' · 지금 ' + formatNowTime(new Date()) : '');
+      renderStatusIn(contentEl, '시간표를 불러오는 중이에요...');
+      lastDayRows = null;
+      lastDayDate = null;
+
+      var url = buildBaseUrl()
+        + '&AY=' + encodeURIComponent(schoolYear(date))
+        + '&ALL_TI_YMD=' + formatYmd(date);
+
+      fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!isSameDay(date, currentDate)) return;
+
+          var block = data && data.misTimetable;
+          if (block && block[1] && block[1].row && block[1].row.length) {
+            lastDayDate = date;
+            lastDayRows = block[1].row;
+            contentEl.innerHTML = '';
+            contentEl.appendChild(buildDayPeriodListEl(lastDayRows, date));
+          } else {
+            renderStatusIn(contentEl, '이 날은 시간표 정보가 없어요 (주말·방학·휴업일 등)');
+          }
+        })
+        .catch(function () {
+          if (!isSameDay(date, currentDate)) return;
+          renderStatusIn(contentEl, '시간표를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+        });
+    }
+
+    // 주간/월간 보기가 공통으로 쓰는, 기간(from~to)으로 한 번에 시간표를
+    // 조회하는 함수.
+    function fetchRange(from, to) {
+      var url = buildBaseUrl()
+        + '&AY=' + encodeURIComponent(schoolYear(from))
+        + '&TI_FROM_YMD=' + formatYmd(from)
+        + '&TI_TO_YMD=' + formatYmd(to);
+
+      return fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var block = data && data.misTimetable;
+          if (block && block[1] && block[1].row) { return block[1].row; }
+          return [];
+        });
+    }
+
+    // 기간 조회 결과(행 배열)를 날짜(YYYYMMDD, ALL_TI_YMD) 기준으로 묶어줍니다.
+    function groupRowsByYmd(rows) {
+      var map = {};
+      rows.forEach(function (row) {
+        var ymd = row.ALL_TI_YMD;
+        if (!ymd) return;
+        if (!map[ymd]) { map[ymd] = []; }
+        map[ymd].push(row);
+      });
+      return map;
+    }
+
+    function jumpToDay(d) {
+      switchView('day');
+      goToDate(d);
+    }
+
+    function renderWeek(monday) {
+      var friday = addDays(monday, 4);
+      dateLabelEl.textContent = formatWeekLabel(monday, friday);
+      weekContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">시간표를 불러오는 중이에요...</p>';
+
+      var seq = ++weekRequestSeq;
+      fetchRange(monday, friday)
+        .then(function (rows) {
+          if (seq !== weekRequestSeq) return;
+          var byDate = groupRowsByYmd(rows);
+          var today = new Date();
+          weekContentEl.innerHTML = '';
+
+          for (var i = 0; i < 5; i++) {
+            var d = addDays(monday, i);
+            var ymd = formatYmd(d);
+            var dayRows = byDate[ymd] || [];
+
+            var cell = document.createElement('div');
+            cell.className = 'meal-week-day' + (isSameDay(d, today) ? ' is-today' : '');
+
+            var days = ['일', '월', '화', '수', '목', '금', '토'];
+            var label = document.createElement('div');
+            label.className = 'meal-week-day-label';
+            label.innerHTML = days[d.getDay()] + '<b>' + (d.getMonth() + 1) + '.' + d.getDate() + '</b>';
+            cell.appendChild(label);
+
+            if (dayRows.length) {
+              cell.appendChild(buildPeriodListEl(dayRows));
+            } else {
+              var empty = document.createElement('p');
+              empty.className = 'meal-week-empty';
+              empty.textContent = '시간표 정보 없음';
+              cell.appendChild(empty);
+            }
+
+            cell.addEventListener('click', (function (dateForCell) {
+              return function () { jumpToDay(dateForCell); };
+            })(d));
+
+            weekContentEl.appendChild(cell);
+          }
+        })
+        .catch(function () {
+          if (seq !== weekRequestSeq) return;
+          weekContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">시간표를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+        });
+    }
+
+    function renderMonth(monthDate) {
+      var first = startOfMonth(monthDate);
+      var last = endOfMonth(monthDate);
+      dateLabelEl.textContent = monthDate.getFullYear() + '년 ' + (monthDate.getMonth() + 1) + '월';
+      monthContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">시간표를 불러오는 중이에요...</p>';
+
+      var seq = ++monthRequestSeq;
+      fetchRange(first, last)
+        .then(function (rows) {
+          if (seq !== monthRequestSeq) return;
+          var byDate = groupRowsByYmd(rows);
+          var today = new Date();
+          monthContentEl.innerHTML = '';
+
+          var leadingBlanks = first.getDay();
+          for (var b = 0; b < leadingBlanks; b++) {
+            var blank = document.createElement('div');
+            blank.className = 'meal-month-cell is-empty';
+            monthContentEl.appendChild(blank);
+          }
+
+          var totalDays = last.getDate();
+          for (var day = 1; day <= totalDays; day++) {
+            var d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+            var ymd = formatYmd(d);
+            var dayRows = byDate[ymd] || [];
+
+            var cell = document.createElement('div');
+            cell.className = 'meal-month-cell' + (isSameDay(d, today) ? ' is-today' : '');
+
+            var dateEl = document.createElement('div');
+            dateEl.className = 'meal-month-date';
+            dateEl.textContent = day;
+            cell.appendChild(dateEl);
+
+            if (dayRows.length) {
+              cell.appendChild(buildPeriodListEl(dayRows));
+            }
+
+            cell.addEventListener('click', (function (dateForCell) {
+              return function () { jumpToDay(dateForCell); };
+            })(d));
+
+            monthContentEl.appendChild(cell);
+          }
+        })
+        .catch(function () {
+          if (seq !== monthRequestSeq) return;
+          monthContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">시간표를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+        });
+    }
+
+    function switchView(mode) {
+      viewMode = mode;
+
+      [viewDayBtn, viewWeekBtn, viewMonthBtn].forEach(function (btn) {
+        if (!btn) return;
+        btn.classList.toggle('active', btn.getAttribute('data-view') === mode);
+      });
+
+      contentEl.style.display = (mode === 'day') ? '' : 'none';
+      weekWrapEl.style.display = (mode === 'week') ? '' : 'none';
+      monthViewEl.style.display = (mode === 'month') ? '' : 'none';
+
+      if (mode === 'day') { fetchTimetable(currentDate); }
+      else if (mode === 'week') { renderWeek(getMonday(currentDate)); }
+      else { renderMonth(currentDate); }
+    }
+
+    function goToDate(newDate) {
+      currentDate = newDate;
+      fetchTimetable(currentDate);
+    }
+
+    function refreshCurrentView() {
+      if (viewMode === 'day') { fetchTimetable(currentDate); }
+      else if (viewMode === 'week') { renderWeek(getMonday(currentDate)); }
+      else { renderMonth(currentDate); }
+    }
+
+    prevBtn.addEventListener('click', function () {
+      if (viewMode === 'day') {
+        goToDate(addDays(currentDate, -1));
+      } else if (viewMode === 'week') {
+        currentDate = addDays(currentDate, -7);
+        renderWeek(getMonday(currentDate));
+      } else {
+        currentDate = addMonths(currentDate, -1);
+        renderMonth(currentDate);
+      }
+    });
+    nextBtn.addEventListener('click', function () {
+      if (viewMode === 'day') {
+        goToDate(addDays(currentDate, 1));
+      } else if (viewMode === 'week') {
+        currentDate = addDays(currentDate, 7);
+        renderWeek(getMonday(currentDate));
+      } else {
+        currentDate = addMonths(currentDate, 1);
+        renderMonth(currentDate);
+      }
+    });
+    todayBtn.addEventListener('click', function () {
+      currentDate = new Date();
+      refreshCurrentView();
+    });
+
+    [viewDayBtn, viewWeekBtn, viewMonthBtn].forEach(function (btn) {
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        switchView(btn.getAttribute('data-view'));
+      });
+    });
+
+    // 학년·반을 바꾸면 지금 보고 있는 화면(일간/주간/월간)을 그대로 다시 불러옵니다.
+    [gradeSelect, classSelect].forEach(function (el) {
+      el.addEventListener('change', refreshCurrentView);
+    });
+
+    // [수정 30] 처음 페이지를 열 때는 기본값(2학년 1반) 대신, 지금 이 시간에
+    // "정보" 수업이 들어있는 반을 먼저 찾아서 그 반 시간표를 보여줍니다.
+    // 찾지 못하면(쉬는 시간·방과후·일치하는 반 없음 등) 원래 기본값을 그대로 씁니다.
+    findCurrentInfoClass(function (match) {
+      if (match) {
+        ensureClassOption(classSelect, match.CLASS_NM);
+        gradeSelect.value = match.GRADE;
+        classSelect.value = match.CLASS_NM;
+      }
+      fetchTimetable(currentDate);
+    });
+
+    // [수정 28] 일간 보기를 켜둔 채로 시간이 흐르면(쉬는 시간을 넘기면)
+    // 완료/진행중/예정 표시와 지금 교시 테두리가 자동으로 따라가도록,
+    // 30초마다 이미 받아온 시간표를 다시 그려줍니다. 네트워크 요청은
+    // 새로 보내지 않습니다.
+    setInterval(function () {
+      if (viewMode !== 'day') return;
+      if (!lastDayRows || !lastDayDate) return;
+      if (!isSameDay(lastDayDate, new Date())) return;
+      dateLabelEl.textContent = formatDisplay(lastDayDate) + ' · 지금 ' + formatNowTime(new Date());
+      contentEl.innerHTML = '';
+      contentEl.appendChild(buildDayPeriodListEl(lastDayRows, lastDayDate));
+    }, 30000);
+  })();
+
+  // =========================================================================
+  // [수정 22] "오늘의 급식" 탭 — NEIS(나이스 교육정보 개방포털) 학교급식식단정보
+  // Open API를 이 파일 안에서 학생 브라우저가 직접 fetch로 호출해 보여줍니다.
+  // 구글 사이트에 삽입된 뒤 학생 브라우저에서 직접 이 주소로 요청을 보내는
+  // 방식이라, 학교/기기 네트워크 환경에 따라 요청이 막힐 수도 있습니다 —
+  // 그런 경우를 대비해 실패 시 안내 문구가 뜨도록 만들어 두었습니다.
+  //
+  // 학교가 바뀌거나 인증키를 재발급 받았다면 아래 세 값만 바꾸면 됩니다.
+  //   - KEY                : NEIS Open API 인증키
+  //   - ATPT_OFCDC_SC_CODE : 시도교육청코드
+  //   - SD_SCHUL_CODE      : 행정표준코드(학교코드)
+  // =========================================================================
+  (function () {
+    var NEIS_CONFIG = {
+      KEY: '5724ec1554c941ac936d2a0f64dad17b',
+      ATPT_OFCDC_SC_CODE: 'J10',
+      SD_SCHUL_CODE: '7692151'
+    };
+
+    var dateLabelEl = document.getElementById('mealDateLabel');
+    var contentEl = document.getElementById('mealContent');
+    var prevBtn = document.getElementById('mealPrevBtn');
+    var nextBtn = document.getElementById('mealNextBtn');
+    var todayBtn = document.getElementById('mealTodayBtn');
+
+    // [수정 25] 일간/주간/월간 전환 관련 DOM
+    var viewDayBtn = document.getElementById('mealViewDayBtn');
+    var viewWeekBtn = document.getElementById('mealViewWeekBtn');
+    var viewMonthBtn = document.getElementById('mealViewMonthBtn');
+    var weekWrapEl = document.getElementById('mealWeekWrap');
+    var weekContentEl = document.getElementById('mealWeekContent');
+    var monthViewEl = document.getElementById('mealMonthView');
+    var monthContentEl = document.getElementById('mealMonthContent');
+
+    // 이 탭 자체가 없는 페이지에서 재사용될 때도 에러 없이 넘어가도록
+    if (!dateLabelEl || !contentEl || !prevBtn || !nextBtn || !todayBtn) return;
+
+    var currentDate = new Date();
+    var viewMode = 'day'; // 'day' | 'week' | 'month'
+    var weekRequestSeq = 0;  // 늦게 도착한 응답이 화면을 덮어쓰지 않도록 하는 순번표
+    var monthRequestSeq = 0;
+
+    function formatYmd(d) {
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return '' + y + m + day;
+    }
+
+    function formatDisplay(d) {
+      var days = ['일', '월', '화', '수', '목', '금', '토'];
+      return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+    }
+
+    // [수정 25-3] 주간/월간 보기용 날짜 계산 도우미들.
+    function addDays(d, n) {
+      var r = new Date(d);
+      r.setDate(r.getDate() + n);
+      return r;
+    }
+    function addMonths(d, n) {
+      return new Date(d.getFullYear(), d.getMonth() + n, 1);
+    }
+    function getMonday(d) {
+      var day = d.getDay(); // 0=일 .. 6=토
+      var diff = (day === 0) ? -6 : (1 - day);
+      return addDays(d, diff);
+    }
+    function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+    function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0); }
+    function formatWeekLabel(monday, friday) {
+      var y = monday.getFullYear();
+      if (monday.getMonth() === friday.getMonth()) {
+        return y + '년 ' + (monday.getMonth() + 1) + '월 ' + monday.getDate() + '일 ~ ' + friday.getDate() + '일';
+      }
+      return y + '년 ' + (monday.getMonth() + 1) + '월 ' + monday.getDate() + '일 ~ '
+        + (friday.getMonth() + 1) + '월 ' + friday.getDate() + '일';
+    }
+
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function renderStatus(message) {
+      contentEl.innerHTML = '';
+      var p = document.createElement('p');
+      p.className = 'meal-status';
+      p.textContent = message;
+      contentEl.appendChild(p);
+    }
+
+    // [수정 23] 나이스 알레르기 유발식품 표시 코드(1~19) → 한글 이름.
+    // (요리명 옆 괄호 숫자를 태그로 바꿔서 보여줄 때 사용)
+    var ALLERGY_NAMES = {
+      '1': '난류', '2': '우유', '3': '메밀', '4': '땅콩', '5': '대두',
+      '6': '밀', '7': '고등어', '8': '게', '9': '새우', '10': '돼지고기',
+      '11': '복숭아', '12': '토마토', '13': '아황산류', '14': '호두', '15': '닭고기',
+      '16': '쇠고기', '17': '오징어', '18': '조개류', '19': '잣'
+    };
+
+    // [수정 23-1] DDISH_NM 한 줄(예: "도토리묵냉국.중 (5.6.9.13.16)",
+    // "삼각김밥(21-중-식)", "찐빵(23-S)")을
+    //   1) 요리 이름 ("도토리묵냉국")
+    //   2) 알레르기 이름 목록 (["대두","밀","새우","아황산류","쇠고기"])
+    // 로 분리합니다. 요리 이름 뒤의 ".중"/".대"/".소" 나 "(21-중-식)", "(23-S)"
+    // 같은 꼬리표는 나이스 학생용 표시 규칙이 아니라 학교 급식관리 프로그램
+    // 내부에서 조식/중식/석식이나 식단 버전을 구분하려고 붙이는 관리용
+    // 코드가 그대로 섞여 나오는 것이라, 요리 이름 어디에 붙어 있든(끝이든
+    // 중간이든) 화면에서는 전부 지웁니다. 단, "(5.6.13)"처럼 숫자와 마침표만
+    // 있는 괄호는 알레르기 코드이므로 지우지 않고 태그로 바꿔서 보여줍니다.
+    function parseDish(raw) {
+      var text = raw;
+      var allergies = [];
+
+      // 괄호 꼬리표는 위치(맨 끝/중간)에 상관없이 문자열 전체에서 찾아 처리
+      // 합니다. 안쪽이 숫자/마침표뿐이면 알레르기 코드로 보고 태그로 살리고,
+      // 그 외(하이픈·한글·영문이 섞인 관리용 코드)는 전부 지웁니다.
+      text = text.replace(/\(([^()]*)\)/g, function (whole, inner) {
+        inner = inner.trim();
+        if (inner && /^[\d.\s]+$/.test(inner)) {
+          inner.split('.')
+            .map(function (code) { return code.trim(); })
+            .filter(Boolean)
+            .forEach(function (code) {
+              allergies.push({ code: code, name: ALLERGY_NAMES[code] || code });
+            });
+        }
+        return '';
+      });
+
+      // 점(.) 뒤에 오는 내용은 ".중", ".대", ".휴게소120" 등 종류·길이
+      // 상관없이 전부 잘라냅니다 — 요리 이름에 나이스 학생용 표시 규칙상
+      // 마침표가 올 일이 없어서, 첫 마침표부터 뒤는 통째로 버려도 안전해요.
+      var dotIdx = text.indexOf('.');
+      if (dotIdx !== -1) { text = text.slice(0, dotIdx); }
+
+      return { name: text.replace(/\s+/g, ' ').trim(), allergies: allergies };
+    }
+
+    // [수정 24] 알레르기 태그 색상 — 알레르기 번호(1~19) 각각에 지정된 파스텔
+    // 색을 고정으로 배정합니다. 목록에 없는 번호가 오면 마지막 색을 기본값으로 씁니다.
+    var ALLERGY_COLORS = {
+      '1':  'rgb(255, 158, 178)',
+      '2':  'rgb(255, 137, 147)',
+      '3':  'rgb(255, 179, 143)',
+      '4':  'rgb(255, 214, 153)',
+      '5':  'rgb(250, 240, 137)',
+      '6':  'rgb(221, 255, 153)',
+      '7':  'rgb(153, 242, 170)',
+      '8':  'rgb(140, 237, 212)',
+      '9':  'rgb(138, 222, 250)',
+      '10': 'rgb(150, 190, 255)',
+      '11': 'rgb(165, 163, 255)',
+      '12': 'rgb(191, 163, 255)',
+      '13': 'rgb(222, 163, 255)',
+      '14': 'rgb(255, 163, 239)',
+      '15': 'rgb(255, 184, 212)',
+      '16': 'rgb(184, 216, 219)',
+      '17': 'rgb(170, 210, 186)',
+      '18': 'rgb(219, 203, 173)',
+      '19': 'rgb(204, 183, 214)'
+    };
+    var ALLERGY_FALLBACK_COLOR = 'rgb(212, 215, 224)';
+
+    function allergyColor(code) {
+      return ALLERGY_COLORS[code] || ALLERGY_FALLBACK_COLOR;
+    }
+
+    // [수정 26] 요리 이름을 음식 종류별로 분류해 글자색을 다르게 보여줍니다.
+    // 요리 이름에 포함된 키워드로 종류를 판별하고(겹치는 키워드가 있을 때는
+    // 아래 순서대로 먼저 매치되는 종류를 따릅니다: 밥·죽류 → 후식·음료 →
+    // 국·찌개·탕류 → 김치·장아찌류 → 나물·채소 반찬 → 메인 반찬 →
+    // 과일·음료류 → 분식·간식류), 어떤 키워드에도 안 걸리면 원래 글자색(검은색)을
+    // 그대로 둡니다. [레인보우 팝 팔레트 — 색상환을 45도씩 균등하게 나눠서
+    // 8가지 종류가 서로 최대한 멀어지도록 배치]
+    var DISH_CATEGORY_COLORS = {
+      rice:    'rgb(135, 104, 11)',  // 밥·죽류 (#87680B)
+      soup:    'rgb(10, 121, 121)',  // 국·찌개·탕류 (#0A7979)
+      main:    'rgb(19, 73, 236)',   // 메인 반찬 (고기·생선 등) (#1349EC)
+      veggie:  'rgb(10, 125, 39)',   // 나물·채소 반찬 (#0A7D27)
+      pickle:  'rgb(216, 18, 18)',   // 김치·장아찌류 (#D81212)
+      dessert: 'rgb(127, 19, 236)',  // 후식·음료 (#7F13EC)
+      fruit:   'rgb(182, 76, 15)',   // 과일·음료류 (레드오렌지 #B64C0F)
+      snack:   'rgb(200, 16, 154)'   // 분식·간식류 (#C8109A)
+    };
+
+    function categorizeDish(name) {
+      if (/(밥|죽)$/.test(name)) return 'rice';
+      if (/요구르트|우유|주스|과일|빵|식혜|화채/.test(name)) return 'dessert';
+      if (/찌개|전골|탕|국(?!수)/.test(name)) return 'soup';
+      if (/김치|깍두기|단무지|장아찌|피클/.test(name)) return 'pickle';
+      if (/나물|무침|샐러드|채소|버섯|미역|시금치|콩나물|숙주/.test(name)) return 'veggie';
+      if (/구이|볶음|조림|튀김|까스|강정|찜/.test(name)) return 'main';
+      // 샤인머스켓·자몽허니블랙티·키위-골드처럼 "과일"이란 글자는 없지만
+      // 과일 이름·음료 이름이 들어간 경우
+      if (/머스켓|자몽|키위|포도|수박|딸기|메론|멜론|망고|바나나|파인애플|체리|블루베리|자두|오렌지|블랙티|아이스티|에이드|스무디|라떼/.test(name)) return 'fruit';
+      // 소떡소떡·뿌링클치킨처럼 위 종류에 안 걸리는 분식·간식류
+      if (/소떡|치킨|핫도그|떡볶이|순대/.test(name)) return 'snack';
+      return null;
+    }
+
+    function dishNameColor(name) {
+      var category = categorizeDish(name);
+      return category ? DISH_CATEGORY_COLORS[category] : null;
+    }
+
+    function renderMealRows(rows) {
+      contentEl.innerHTML = '';
+      rows.forEach(function (row) {
+        var block = document.createElement('div');
+        block.className = 'meal-type-block';
+
+        var list = document.createElement('ul');
+        list.className = 'meal-dish-list';
+        var dishes = (row.DDISH_NM || '')
+          .split(/<br\s*\/?>/i)
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+        dishes.forEach(function (dish) {
+          var parsed = parseDish(dish);
+
+          var li = document.createElement('li');
+          li.className = 'meal-dish-row';
+
+          var nameSpan = document.createElement('span');
+          nameSpan.className = 'meal-dish-name';
+          nameSpan.textContent = parsed.name;
+          var dishColor = dishNameColor(parsed.name);
+          if (dishColor) { nameSpan.style.color = dishColor; }
+          li.appendChild(nameSpan);
+
+          if (parsed.allergies.length) {
+            var tagWrap = document.createElement('span');
+            tagWrap.className = 'meal-allergy-tags';
+            parsed.allergies.forEach(function (a) {
+              var tag = document.createElement('span');
+              tag.className = 'meal-allergy-tag';
+              tag.textContent = a.name;
+              tag.style.backgroundColor = allergyColor(a.code);
+              tagWrap.appendChild(tag);
+            });
+            li.appendChild(tagWrap);
+          }
+
+          list.appendChild(li);
+        });
+        block.appendChild(list);
+
+        if (row.CAL_INFO) {
+          var cal = document.createElement('p');
+          cal.className = 'meal-cal';
+          cal.textContent = '🔥 ' + row.CAL_INFO;
+          block.appendChild(cal);
+        }
+
+        contentEl.appendChild(block);
+      });
+    }
+
+    function fetchMeal(date) {
+      dateLabelEl.textContent = formatDisplay(date);
+      renderStatus('급식 정보를 불러오는 중이에요...');
+
+      var url = 'https://open.neis.go.kr/hub/mealServiceDietInfo'
+        + '?KEY=' + encodeURIComponent(NEIS_CONFIG.KEY)
+        + '&Type=json'
+        + '&ATPT_OFCDC_SC_CODE=' + encodeURIComponent(NEIS_CONFIG.ATPT_OFCDC_SC_CODE)
+        + '&SD_SCHUL_CODE=' + encodeURIComponent(NEIS_CONFIG.SD_SCHUL_CODE)
+        + '&MLSV_YMD=' + formatYmd(date);
+
+      fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          // 요청을 보낸 뒤 사용자가 다른 날짜로 넘어갔다면, 늦게 도착한
+          // 이 응답으로 화면을 덮어쓰지 않는다.
+          if (!isSameDay(date, currentDate)) return;
+
+          var block = data && data.mealServiceDietInfo;
+          if (block && block[1] && block[1].row && block[1].row.length) {
+            renderMealRows(block[1].row);
+          } else {
+            renderStatus('이 날은 급식 정보가 없어요 (주말·방학·휴업일 등)');
+          }
+        })
+        .catch(function () {
+          if (!isSameDay(date, currentDate)) return;
+          renderStatus('급식 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+        });
+    }
+
+    // [수정 25-4] 주간/월간 보기가 공통으로 쓰는, 기간(from~to)으로 한 번에
+    // 급식을 조회하는 함수. 나이스 API는 MLSV_FROM_YMD~MLSV_TO_YMD를 주면
+    // 그 기간의 모든 날짜 급식을 한 번에 돌려줘서, 하루하루 따로 요청할
+    // 필요가 없습니다.
+    function fetchRange(from, to) {
+      var url = 'https://open.neis.go.kr/hub/mealServiceDietInfo'
+        + '?KEY=' + encodeURIComponent(NEIS_CONFIG.KEY)
+        + '&Type=json'
+        + '&ATPT_OFCDC_SC_CODE=' + encodeURIComponent(NEIS_CONFIG.ATPT_OFCDC_SC_CODE)
+        + '&SD_SCHUL_CODE=' + encodeURIComponent(NEIS_CONFIG.SD_SCHUL_CODE)
+        + '&MLSV_FROM_YMD=' + formatYmd(from)
+        + '&MLSV_TO_YMD=' + formatYmd(to);
+
+      return fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var block = data && data.mealServiceDietInfo;
+          if (block && block[1] && block[1].row) { return block[1].row; }
+          return [];
+        });
+    }
+
+    // 기간 조회 결과(행 배열)를 날짜(YYYYMMDD) 기준으로 묶어줍니다.
+    function groupRowsByYmd(rows) {
+      var map = {};
+      rows.forEach(function (row) {
+        var ymd = row.MLSV_YMD;
+        if (!ymd) return;
+        if (!map[ymd]) { map[ymd] = []; }
+        map[ymd].push(row);
+      });
+      return map;
+    }
+
+    // 주간 보기 칸 안에 넣을 요리 목록(간단 버전 - compact=true면 알레르기
+    // 태그는 생략해서 칸이 너무 붐비지 않게 합니다).
+    function buildDishListEl(row, compact) {
+      var list = document.createElement('ul');
+      list.className = 'meal-dish-list';
+      var dishes = (row.DDISH_NM || '')
+        .split(/<br\s*\/?>/i)
+        .map(function (s) { return s.trim(); })
+        .filter(Boolean);
+      dishes.forEach(function (dish) {
+        var parsed = parseDish(dish);
+
+        var li = document.createElement('li');
+        li.className = 'meal-dish-row';
+
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'meal-dish-name';
+        nameSpan.textContent = parsed.name;
+        var dishColor = dishNameColor(parsed.name);
+        if (dishColor) { nameSpan.style.color = dishColor; }
+        li.appendChild(nameSpan);
+
+        if (!compact && parsed.allergies.length) {
+          var tagWrap = document.createElement('span');
+          tagWrap.className = 'meal-allergy-tags';
+          parsed.allergies.forEach(function (a) {
+            var tag = document.createElement('span');
+            tag.className = 'meal-allergy-tag';
+            tag.textContent = a.name;
+            tag.style.backgroundColor = allergyColor(a.code);
+            tagWrap.appendChild(tag);
+          });
+          li.appendChild(tagWrap);
+        }
+
+        list.appendChild(li);
+      });
+      return list;
+    }
+
+    // 주간/월간 칸을 클릭하면 그 날짜의 일간 보기로 바로 넘어갑니다.
+    function jumpToDay(d) {
+      switchView('day');
+      goToDate(d);
+    }
+
+    function renderWeek(monday) {
+      var friday = addDays(monday, 4);
+      dateLabelEl.textContent = formatWeekLabel(monday, friday);
+      weekContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">급식 정보를 불러오는 중이에요...</p>';
+
+      var seq = ++weekRequestSeq;
+      fetchRange(monday, friday)
+        .then(function (rows) {
+          if (seq !== weekRequestSeq) return; // 그 사이에 다른 주로 넘어갔으면 무시
+          var byDate = groupRowsByYmd(rows);
+          var today = new Date();
+          weekContentEl.innerHTML = '';
+
+          for (var i = 0; i < 5; i++) {
+            var d = addDays(monday, i);
+            var ymd = formatYmd(d);
+            var dayRows = byDate[ymd] || [];
+
+            var cell = document.createElement('div');
+            cell.className = 'meal-week-day' + (isSameDay(d, today) ? ' is-today' : '');
+
+            var days = ['일', '월', '화', '수', '목', '금', '토'];
+            var label = document.createElement('div');
+            label.className = 'meal-week-day-label';
+            label.innerHTML = days[d.getDay()] + '<b>' + (d.getMonth() + 1) + '.' + d.getDate() + '</b>';
+            cell.appendChild(label);
+
+            if (dayRows.length) {
+              dayRows.forEach(function (row) {
+                cell.appendChild(buildDishListEl(row, true));
+              });
+            } else {
+              var empty = document.createElement('p');
+              empty.className = 'meal-week-empty';
+              empty.textContent = '급식 정보 없음';
+              cell.appendChild(empty);
+            }
+
+            cell.addEventListener('click', (function (dateForCell) {
+              return function () { jumpToDay(dateForCell); };
+            })(d));
+
+            weekContentEl.appendChild(cell);
+          }
+        })
+        .catch(function () {
+          if (seq !== weekRequestSeq) return;
+          weekContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">급식 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+        });
+    }
+
+    function renderMonth(monthDate) {
+      var first = startOfMonth(monthDate);
+      var last = endOfMonth(monthDate);
+      dateLabelEl.textContent = monthDate.getFullYear() + '년 ' + (monthDate.getMonth() + 1) + '월';
+      monthContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">급식 정보를 불러오는 중이에요...</p>';
+
+      var seq = ++monthRequestSeq;
+      fetchRange(first, last)
+        .then(function (rows) {
+          if (seq !== monthRequestSeq) return; // 그 사이에 다른 달로 넘어갔으면 무시
+          var byDate = groupRowsByYmd(rows);
+          var today = new Date();
+          monthContentEl.innerHTML = '';
+
+          var leadingBlanks = first.getDay(); // 1일이 무슨 요일인지(0=일)
+          for (var b = 0; b < leadingBlanks; b++) {
+            var blank = document.createElement('div');
+            blank.className = 'meal-month-cell is-empty';
+            monthContentEl.appendChild(blank);
+          }
+
+          var totalDays = last.getDate();
+          for (var day = 1; day <= totalDays; day++) {
+            var d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+            var ymd = formatYmd(d);
+            var dayRows = byDate[ymd] || [];
+
+            var cell = document.createElement('div');
+            cell.className = 'meal-month-cell' + (isSameDay(d, today) ? ' is-today' : '');
+
+            var dateEl = document.createElement('div');
+            dateEl.className = 'meal-month-date';
+            dateEl.textContent = day;
+            cell.appendChild(dateEl);
+
+            if (dayRows.length) {
+              dayRows.forEach(function (row) {
+                cell.appendChild(buildDishListEl(row, true));
+              });
+            }
+
+            cell.addEventListener('click', (function (dateForCell) {
+              return function () { jumpToDay(dateForCell); };
+            })(d));
+
+            monthContentEl.appendChild(cell);
+          }
+        })
+        .catch(function () {
+          if (seq !== monthRequestSeq) return;
+          monthContentEl.innerHTML = '<p class="meal-status" style="grid-column:1/-1;">급식 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+        });
+    }
+
+    // [수정 25-5] 일간/주간/월간 중 하나로 화면을 전환합니다. 버튼의
+    // active 표시와 각 보기 영역의 표시/숨김을 맞추고, 해당 보기의
+    // 데이터를 새로 불러옵니다.
+    function switchView(mode) {
+      viewMode = mode;
+
+      [viewDayBtn, viewWeekBtn, viewMonthBtn].forEach(function (btn) {
+        if (!btn) return;
+        btn.classList.toggle('active', btn.getAttribute('data-view') === mode);
+      });
+
+      contentEl.style.display = (mode === 'day') ? '' : 'none';
+      weekWrapEl.style.display = (mode === 'week') ? '' : 'none';
+      monthViewEl.style.display = (mode === 'month') ? '' : 'none';
+
+      if (mode === 'day') { fetchMeal(currentDate); }
+      else if (mode === 'week') { renderWeek(getMonday(currentDate)); }
+      else { renderMonth(currentDate); }
+    }
+
+    function goToDate(newDate) {
+      currentDate = newDate;
+      fetchMeal(currentDate);
+    }
+
+    prevBtn.addEventListener('click', function () {
+      if (viewMode === 'day') {
+        goToDate(addDays(currentDate, -1));
+      } else if (viewMode === 'week') {
+        currentDate = addDays(currentDate, -7);
+        renderWeek(getMonday(currentDate));
+      } else {
+        currentDate = addMonths(currentDate, -1);
+        renderMonth(currentDate);
+      }
+    });
+    nextBtn.addEventListener('click', function () {
+      if (viewMode === 'day') {
+        goToDate(addDays(currentDate, 1));
+      } else if (viewMode === 'week') {
+        currentDate = addDays(currentDate, 7);
+        renderWeek(getMonday(currentDate));
+      } else {
+        currentDate = addMonths(currentDate, 1);
+        renderMonth(currentDate);
+      }
+    });
+    todayBtn.addEventListener('click', function () {
+      currentDate = new Date();
+      if (viewMode === 'day') { goToDate(currentDate); }
+      else if (viewMode === 'week') { renderWeek(getMonday(currentDate)); }
+      else { renderMonth(currentDate); }
+    });
+
+    [viewDayBtn, viewWeekBtn, viewMonthBtn].forEach(function (btn) {
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        switchView(btn.getAttribute('data-view'));
+      });
+    });
+
+    fetchMeal(currentDate);
+  })();
+
+  // =========================================================================
+  // [수정 5] 탭(페이지) 전환 로직
+  // 새 탭을 추가하고 싶다면:
+  //   1) 위쪽 <nav class="tabs"> 안에 <button class="tab-btn" data-target="새아이디">버튼이름</button> 추가
+  //   2) <main> 안에 <section id="새아이디" class="tab-panel">내용</section> 추가
+  // 이 스크립트가 data-target 값을 읽어 자동으로 탭 전환을 처리합니다.
+  // =========================================================================
+  (function () {
+    var tabButtons = document.querySelectorAll('.tab-btn');
+    var panels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetId = btn.getAttribute('data-target');
+
+        tabButtons.forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        panels.forEach(function (p) {
+          p.classList.toggle('active', p.id === targetId);
+        });
+
+        // 탭을 바꾸면 화면 맨 위로 스크롤 (모바일에서 자연스럽게)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // O/X 입력칸은 자동으로 대문자 O 또는 X 한 글자만 남도록 정리
+    document.querySelectorAll('.ox-input').forEach(function (input) {
+      input.addEventListener('input', function () {
+        var v = input.value.toUpperCase().replace(/[^OX]/g, '');
+        input.value = v.slice(0, 1);
+      });
+    });
+
+    // =========================================================================
+    // [수정 10-1] 임시 저장(자동 저장) — 이 컴퓨터(브라우저)의 localStorage에
+    // 입력값을 저장했다가, 페이지를 새로고침하거나 다시 열었을 때 불러옵니다.
+    //
+    // - 각 입력칸의 aria-label을 key로 써서 값을 저장/복원합니다.
+    // - 타이핑할 때마다 저장하면 낭비이므로, 입력을 멈추고 0.6초 뒤에 저장합니다
+    //   (디바운스). 저장되면 "임시 저장됨" 표시가 잠깐 떴다가 사라집니다.
+    // - 컴퓨터실은 여러 학생이 한 컴퓨터를 번갈아 쓰므로, 사생활 보호 모드 등
+    //   으로 localStorage를 아예 못 쓰는 경우에도 오류 없이 조용히 넘어가도록
+    //   try/catch로 감쌌습니다. (이 기능이 꺼져 있어도 학습지 자체는 정상 동작)
+    // =========================================================================
+    var DRAFT_KEY = 'compsys_worksheet_draft_v1';
+    var autosaveStatusEl = document.getElementById('autosaveStatus');
+    var autosaveHideTimer = null;
+
+    function worksheetInputs() {
+      // [수정 16] 여러 줄 답변용 textarea(예: 제미나이 답변 요약칸)도
+      // input과 똑같이 자동 저장/불러오기 대상에 포함되도록 함께 찾습니다.
+      return Array.prototype.slice.call(
+        document.querySelectorAll('#tab-worksheet input[aria-label], #tab-worksheet textarea[aria-label]')
+      );
+    }
+
+    function showAutosaveStatus(text) {
+      if (!autosaveStatusEl) return;
+      autosaveStatusEl.textContent = text;
+      autosaveStatusEl.classList.add('visible');
+      clearTimeout(autosaveHideTimer);
+      autosaveHideTimer = setTimeout(function () {
+        autosaveStatusEl.classList.remove('visible');
+      }, 2200);
+    }
+
+    // [수정 11-1] 진행률 계산 — 빈칸(input.blank, id-fields 반/번호/이름 제외) +
+    // O/X 칸 + 짝짓기 칸(.dnd-slot)만 셉니다. "골라보기" 카드는 정답 개수가
+    // 정해져 있지 않아 진행률 계산에서는 제외했어요.
+    // [수정 21] "PDF로 저장하기" 버튼을 누를 때 진행률을 검사할 수 있도록,
+    // 가장 최근에 계산된 진행률(%)을 이 변수에 저장해둡니다.
+    var currentProgressPct = 0;
+    function updateProgress() {
+      // [수정 16] textarea.blank(제미나이 답변 요약칸 등 여러 줄 입력칸)도
+      // input.blank와 똑같이 진행률 계산에 포함합니다.
+      var blanks = document.querySelectorAll('#tab-worksheet .section-block input.blank, #tab-worksheet .section-block textarea.blank');
+      var oxInputs = document.querySelectorAll('#tab-worksheet .ox-input');
+      var slots = document.querySelectorAll('#tab-worksheet .dnd-slot');
+
+      var total = blanks.length + oxInputs.length + slots.length;
+      var filled = 0;
+      blanks.forEach(function (el) { if (el.value.trim()) filled++; });
+      oxInputs.forEach(function (el) { if (el.value.trim()) filled++; });
+      slots.forEach(function (el) { if (el.firstElementChild) filled++; });
+
+      var pct = total ? Math.round((filled / total) * 100) : 0;
+      currentProgressPct = pct;
+      var fillEl = document.getElementById('progressFill');
+      var labelEl = document.getElementById('progressLabel');
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (labelEl) labelEl.textContent = filled + ' / ' + total + '칸 완료 (' + pct + '%)';
+    }
+
+    // [수정 14-1] 진행률 표시줄 고정 위치(top) 계산 — 상단 탭 바(.topbar)는
+    // 화면 크기에 따라 줄바꿈되어 높이가 달라지므로, 탭 바의 실제 높이를
+    // 재서 진행률 바가 그 바로 아래에 딱 붙어 고정되도록 --progress-sticky-top
+    // 값을 매번 다시 계산해줍니다.
+    function updateProgressStickyTop() {
+      var topbar = document.querySelector('.topbar');
+      if (!topbar) return;
+      var topbarTop = 8; // .topbar의 CSS top 값(var(--space-sm))과 맞춘 여백(px)
+      var gap = 8; // 탭 바와 진행률 바 사이의 간격(px)
+      var stickyTop = topbarTop + topbar.getBoundingClientRect().height + gap;
+      document.documentElement.style.setProperty('--progress-sticky-top', stickyTop + 'px');
+    }
+
+    function saveDraft() {
+      try {
+        var data = { fields: {}, choices: {}, dnd: {} };
+        worksheetInputs().forEach(function (el) {
+          data.fields[el.getAttribute('aria-label')] = el.value;
+        });
+        document.querySelectorAll('.choice-card').forEach(function (card) {
+          data.choices[card.dataset.item] = card.classList.contains('selected');
+        });
+        document.querySelectorAll('.dnd-slot').forEach(function (slot) {
+          var chip = slot.firstElementChild;
+          data.dnd[slot.dataset.slot] = chip ? chip.dataset.value : '';
+        });
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+        showAutosaveStatus('✅ 임시 저장됨');
+      } catch (e) {
+        // localStorage를 못 쓰는 환경(사생활 보호 모드 등) — 조용히 무시
+      }
+    }
+
+    function loadDraft() {
+      try {
+        var raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        var restoredAny = false;
+
+        if (data.fields) {
+          worksheetInputs().forEach(function (el) {
+            var saved = data.fields[el.getAttribute('aria-label')];
+            if (saved) { el.value = saved; restoredAny = true; }
+          });
+        }
+        if (data.choices) {
+          document.querySelectorAll('.choice-card').forEach(function (card) {
+            if (data.choices[card.dataset.item]) {
+              card.classList.add('selected');
+              restoredAny = true;
+            }
+          });
+        }
+        if (data.dnd) {
+          Object.keys(data.dnd).forEach(function (slotKey) {
+            var value = data.dnd[slotKey];
+            if (!value) return;
+            var slot = document.querySelector('.dnd-slot[data-slot="' + slotKey + '"]');
+            var chip = document.querySelector('.dnd-chip[data-value="' + value + '"]');
+            if (slot && chip) { slot.appendChild(chip); restoredAny = true; }
+          });
+        }
+
+        if (restoredAny) showAutosaveStatus('↩️ 이전에 작성하던 내용을 불러왔어요');
+      } catch (e) {
+        // 저장된 내용을 못 읽어도 학습지는 빈 상태로 정상 동작
+      }
+    }
+
+    function clearDraft() {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    }
+
+    // 입력이 멈추고 0.6초 뒤에 저장 (디바운스) — 텍스트 입력 전용
+    var saveDebounceTimer = null;
+    function scheduleSave() {
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(saveDraft, 600);
+    }
+
+    // [수정 17-1] 여러 줄 입력칸(제미나이 답변 요약 등) 자동 높이 조절 —
+    // 글자가 2줄을 넘어가면 스크롤 없이 칸 자체가 아래로 늘어납니다.
+    // 원리: 높이를 일단 auto로 비웠다가, 실제로 필요한 높이(scrollHeight)에
+    // 맞춰 다시 지정합니다. 임시 저장된 긴 글을 불러왔을 때도 페이지를 열자마자
+    // 한 번 실행해서(아래 loadDraft() 다음 줄) 미리 늘어난 상태로 보이게 합니다.
+    function autoGrowTextarea(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+    var worksheetTextareas = Array.prototype.slice.call(
+      document.querySelectorAll('#tab-worksheet textarea.blank')
+    );
+
+    // [수정 31] 붙여넣기(paste)만 막으면, 어떤 확장 프로그램이나 자동화
+    // 도구가 "붙여넣기"가 아닌 다른 방법(예: 자동 입력 스크립트)으로 아주
+    // 빠르게 글자를 채워 넣는 것까지는 막지 못합니다. 그래서 입력 속도도
+    // 함께 확인합니다 — 최근 2초 동안 늘어난 글자 수를 분당 속도로 환산해서
+    // (예: 2초 동안 34자 이상 = 분당 1000자 이상) 1000자/분을 넘으면
+    // 비정상적으로 빠른 입력으로 보고, 그 순간 늘어난 글자를 되돌리고
+    // 붙여넣기를 막을 때와 같은 안내 문구를 보여줍니다. 보통 사람이 손으로
+    // 아무리 빨리 타이핑해도 이 속도를 꾸준히 넘기기는 어렵습니다.
+    worksheetInputs().forEach(function (el) {
+      el.__typingLog = [];
+      el.__safeValue = el.value || '';
+      el.addEventListener('input', function () {
+        var now = Date.now();
+        var newValue = el.value;
+        var delta = newValue.length - el.__safeValue.length;
+
+        if (delta > 0) {
+          el.__typingLog.push({ time: now, count: delta });
+          el.__typingLog = el.__typingLog.filter(function (entry) { return now - entry.time <= 2000; });
+          var charsInWindow = el.__typingLog.reduce(function (sum, entry) { return sum + entry.count; }, 0);
+          var charsPerMinute = charsInWindow * 30; // 2초 동안의 글자 수를 분당 속도로 환산 (×60/2)
+
+          if (charsPerMinute > 1000) {
+            el.value = el.__safeValue;
+            el.__typingLog = [];
+            showAutosaveStatus('⌨️ 이 칸은 붙여넣기 대신 직접 입력해주세요!');
+            if (el.tagName === 'TEXTAREA') autoGrowTextarea(el);
+            scheduleSave();
+            updateProgress();
+            return;
+          }
+        } else {
+          // 지우는 중이면(글자 수가 줄었으면) 속도 기록을 초기화합니다.
+          el.__typingLog = [];
+        }
+
+        el.__safeValue = newValue;
+        if (el.tagName === 'TEXTAREA') autoGrowTextarea(el);
+        scheduleSave();
+        updateProgress();
+      });
+    });
+
+    // [수정 30] 빈칸(정답 입력칸)에는 복사-붙여넣기를 막아서, 학생이 직접
+    // 키보드로 입력하도록 합니다. 붙여넣기(Ctrl+V, 마우스 오른쪽 클릭
+    // 붙여넣기, 터치 메뉴 붙여넣기)와 텍스트를 끌어다 놓는 것(드래그
+    // 앤 드롭)을 모두 막고, 시도하면 안내 문구를 잠깐 보여줍니다.
+    // (반/번호/이름 칸도 같은 input.blank 클래스를 써서 함께 적용됩니다.)
+    document.querySelectorAll('#tab-worksheet input.blank, #tab-worksheet textarea.blank').forEach(function (el) {
+      el.addEventListener('paste', function (e) {
+        e.preventDefault();
+        showAutosaveStatus('⌨️ 이 칸은 붙여넣기 대신 직접 입력해주세요!');
+      });
+      el.addEventListener('drop', function (e) {
+        e.preventDefault();
+        showAutosaveStatus('⌨️ 이 칸은 붙여넣기 대신 직접 입력해주세요!');
+      });
+    });
+
+    // [수정 12-1] 골라보기 카드 — 클릭할 때마다 선택 상태를 토글
+    // [수정 21] data-group 속성이 같은 카드끼리는 "둘 중 하나만 고르기"
+    // (예: 두 문장 중 내가 맞다고 생각하는 것 하나만 선택) 동작을 하도록,
+    // 같은 그룹의 다른 카드를 먼저 선택 해제한 뒤 토글합니다.
+    // data-group이 없는 카드는 기존처럼 여러 개를 동시에 고를 수 있어요.
+    document.querySelectorAll('.choice-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var group = card.dataset.group;
+        if (group) {
+          document.querySelectorAll('.choice-card[data-group="' + group + '"]').forEach(function (other) {
+            if (other !== card) other.classList.remove('selected');
+          });
+        }
+        card.classList.toggle('selected');
+        // [수정 29] O/X 형성평가 버튼이면, 답을 바꾼 것이므로 이전 채점 표시를 지운다
+        var oxItem = card.closest('.ox-quiz-item');
+        if (oxItem) clearOxCheck(oxItem);
+        // [수정 39] 문장형 미니 퀴즈(같은 data-group의 카드 중 하나를 고르는
+        // 유형)도 답을 바꾸면 이전 정답/오답 표시를 지운다
+        if (group) clearChoiceQuizCheck(group);
+        scheduleSave();
+      });
+    });
+
+    // [수정 13-1] 짝짓기(드래그 앤 드롭 + 클릭 대체) 로직
+    // [수정 22] 한 페이지에 짝짓기 활동이 여러 개(트레이가 여러 개) 있을
+    // 수 있어서, 칩을 "자기가 원래 있던 트레이"로 정확히 돌려보내도록
+    // 손봤습니다. 페이지가 로드될 때(=아직 아무 칩도 옮기기 전) 각 칩의
+    // data-home-tray 속성에 자신이 속한 트레이의 id를 기억해두고,
+    // 트레이로 돌려보낼 때는 그 id의 트레이를 찾아 넣어줍니다.
+    var armedChip = null;
+
+    document.querySelectorAll('.dnd-tray').forEach(function (tray) {
+      Array.prototype.forEach.call(tray.querySelectorAll('.dnd-chip'), function (chip) {
+        chip.dataset.homeTray = tray.id;
+      });
+    });
+
+    // [수정 23] 칸에 붙어있던 "정답 확인" 표시(초록/빨강 + ✅/❌)를 지웁니다.
+    // 이름표가 칸을 떠나거나 새 이름표가 들어오면, 이제 안 맞는 표시이므로
+    // 지워서 다시 "정답 확인"을 눌러야 새로 표시되게 합니다.
+    function clearSlotCheck(slot) {
+      if (!slot || !slot.classList) return;
+      slot.classList.remove('dnd-slot--correct', 'dnd-slot--wrong');
+      var mark = slot.querySelector('.dnd-check-mark');
+      if (mark) mark.remove();
+    }
+
+    // [수정 29] MISSION 5 형성평가(O/X 버튼) 채점 표시를 지웁니다 — 위
+    // clearSlotCheck와 같은 역할이지만 짝짓기 칸이 아니라 O/X 문항 상자용입니다.
+    function clearOxCheck(item) {
+      if (!item || !item.classList) return;
+      item.classList.remove('ox-quiz-item--correct', 'ox-quiz-item--wrong');
+      var mark = item.querySelector('.ox-check-mark');
+      if (mark) mark.remove();
+    }
+
+    function returnChipToTray(chip) {
+      var prevSlot = chip.parentElement && chip.parentElement.classList.contains('dnd-slot') ? chip.parentElement : null;
+      if (prevSlot) clearSlotCheck(prevSlot);
+      var tray = document.getElementById(chip.dataset.homeTray);
+      if (tray) tray.appendChild(chip);
+    }
+    function placeChipInSlot(chip, slot) {
+      var prevSlot = chip.parentElement && chip.parentElement.classList.contains('dnd-slot') ? chip.parentElement : null;
+      if (prevSlot && prevSlot !== slot) clearSlotCheck(prevSlot);
+      clearSlotCheck(slot);
+      var existing = slot.firstElementChild;
+      if (existing && existing !== chip) returnChipToTray(existing);
+      slot.appendChild(chip);
+    }
+
+    document.querySelectorAll('.dnd-chip').forEach(function (chip) {
+      chip.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('text/plain', chip.dataset.value);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(function () { chip.classList.add('dragging'); }, 0);
+      });
+      chip.addEventListener('dragend', function () {
+        chip.classList.remove('dragging');
+      });
+      // 클릭(터치 기기 대체 방식): 트레이에 있는 칩을 클릭 → "선택(armed)".
+      // 이미 칸에 놓인 칩을 클릭하면 트레이로 되돌아간다.
+      chip.addEventListener('click', function () {
+        if (chip.parentElement && chip.parentElement.classList.contains('dnd-slot')) {
+          returnChipToTray(chip);
+          updateProgress();
+          scheduleSave();
+          return;
+        }
+        document.querySelectorAll('.dnd-chip.armed').forEach(function (c) { c.classList.remove('armed'); });
+        chip.classList.add('armed');
+        armedChip = chip;
+      });
+    });
+
+    document.querySelectorAll('.dnd-slot').forEach(function (slot) {
+      slot.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        slot.classList.add('dragover');
+      });
+      slot.addEventListener('dragleave', function () {
+        slot.classList.remove('dragover');
+      });
+      slot.addEventListener('drop', function (e) {
+        e.preventDefault();
+        slot.classList.remove('dragover');
+        var value = e.dataTransfer.getData('text/plain');
+        var chip = document.querySelector('.dnd-chip[data-value="' + value + '"]');
+        if (chip) {
+          placeChipInSlot(chip, slot);
+          updateProgress();
+          scheduleSave();
+        }
+      });
+      // 클릭 대체 방식: "선택(armed)"된 칩이 있는 상태에서 빈/찬 칸을 클릭하면 그 칸에 놓는다.
+      slot.addEventListener('click', function () {
+        if (armedChip) {
+          placeChipInSlot(armedChip, slot);
+          armedChip.classList.remove('armed');
+          armedChip = null;
+          updateProgress();
+          scheduleSave();
+        }
+      });
+    });
+
+    // [수정 22] "다시 섞기" 버튼도 트레이별로 따로 동작하도록, 버튼의
+    // data-target-tray 속성(예: data-target-tray="dndTray1")에 적힌
+    // 트레이에 속한 칩만 되돌립니다.
+    document.querySelectorAll('.dnd-reset-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetTray = btn.dataset.targetTray;
+        document.querySelectorAll('.dnd-chip').forEach(function (chip) {
+          if (!targetTray || chip.dataset.homeTray === targetTray) returnChipToTray(chip);
+        });
+        // [수정 23-2] 다시 섞으면 이전 "정답 확인" 결과 요약 문구도 지금은
+        // 의미가 없어지므로 함께 지워줍니다.
+        var resultEl = document.getElementById(btn.dataset.resultId || '');
+        if (resultEl) resultEl.textContent = '';
+        updateProgress();
+        scheduleSave();
+      });
+    });
+
+    // [수정 23-1] "정답 확인" 버튼 — 누른 순간의 상태만 채점합니다(실시간
+    // 채점 아님). 맞은 칸은 초록 테두리+✅, 틀린 칸은 빨강 테두리+❌로
+    // 표시하고, 이름표는 그대로 두어서 학생이 직접 옮겨 다시 고칠 수
+    // 있게 합니다. 아직 아무것도 놓지 않은 빈 칸은 채점하지 않습니다.
+    // 각 칸의 정답은 HTML의 data-answer 속성에, 이름표의 정답 키는
+    // data-answer-key 속성에 적어둡니다(같은 이름표가 여러 개 있어도
+    // data-answer-key가 같으면 정답으로 인정됩니다).
+    document.querySelectorAll('.dnd-check-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var group = btn.dataset.targetTray;
+        var resultEl = document.getElementById(btn.dataset.resultId || '');
+        var correctCount = 0, wrongCount = 0, emptyCount = 0, totalCount = 0;
+
+        document.querySelectorAll('.dnd-slot[data-check-group="' + group + '"]').forEach(function (slot) {
+          totalCount++;
+          clearSlotCheck(slot);
+          var chip = slot.firstElementChild;
+          if (!chip) { emptyCount++; return; }
+
+          var expected = slot.dataset.answer;
+          var actual = chip.dataset.answerKey || chip.dataset.value;
+          var mark = document.createElement('span');
+          mark.className = 'dnd-check-mark';
+
+          if (expected && actual === expected) {
+            slot.classList.add('dnd-slot--correct');
+            mark.textContent = '✅';
+            correctCount++;
+          } else {
+            slot.classList.add('dnd-slot--wrong');
+            mark.textContent = '❌';
+            wrongCount++;
+          }
+          slot.appendChild(mark);
+        });
+
+        if (resultEl) {
+          resultEl.textContent = emptyCount > 0
+            ? '✅ ' + correctCount + '개 정답 · ❌ ' + wrongCount + '개 오답 · 아직 안 채운 칸 ' + emptyCount + '개'
+            : '✅ ' + correctCount + '개 정답 · ❌ ' + wrongCount + '개 오답 (총 ' + totalCount + '칸)';
+        }
+      });
+    });
+
+    // [수정 29-1] MISSION 5 형성평가 "다시 풀기" — 고른 O/X 답과 채점
+    // 표시를 모두 지워서 처음부터 다시 풀 수 있게 합니다.
+    document.querySelectorAll('.ox-reset-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.ox-quiz-item').forEach(function (item) {
+          clearOxCheck(item);
+          item.querySelectorAll('.choice-card').forEach(function (card) {
+            card.classList.remove('selected');
+          });
+        });
+        var resultEl = document.getElementById(btn.dataset.resultId || '');
+        if (resultEl) resultEl.textContent = '';
+        scheduleSave();
+      });
+    });
+
+    // [수정 29-2] MISSION 5 형성평가 "정답 확인" — 고른 O/X가 정답
+    // (data-ox-answer)과 같은지 비교해서 문항 상자를 초록(정답)/빨강(오답)
+    // 으로 표시합니다. 아직 고르지 않은 문항은 채점하지 않습니다.
+    document.querySelectorAll('.ox-check-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var resultEl = document.getElementById(btn.dataset.resultId || '');
+        var correctCount = 0, wrongCount = 0, emptyCount = 0, totalCount = 0;
+
+        document.querySelectorAll('.ox-quiz-item').forEach(function (item) {
+          totalCount++;
+          clearOxCheck(item);
+          var selected = item.querySelector('.choice-card.selected');
+          if (!selected) { emptyCount++; return; }
+
+          var expected = item.dataset.oxAnswer;
+          var actual = selected.dataset.value;
+          var mark = document.createElement('span');
+          mark.className = 'ox-check-mark';
+
+          if (expected && actual === expected) {
+            item.classList.add('ox-quiz-item--correct');
+            mark.textContent = '✅';
+            correctCount++;
+          } else {
+            item.classList.add('ox-quiz-item--wrong');
+            mark.textContent = '❌';
+            wrongCount++;
+          }
+          item.appendChild(mark);
+        });
+
+        if (resultEl) {
+          resultEl.textContent = emptyCount > 0
+            ? '✅ ' + correctCount + '개 정답 · ❌ ' + wrongCount + '개 오답 · 아직 안 고른 문항 ' + emptyCount + '개'
+            : '✅ ' + correctCount + '개 정답 · ❌ ' + wrongCount + '개 오답 (총 ' + totalCount + '문항)';
+        }
+      });
+    });
+
+    // [수정 39] 문장형(서술형) 보기 중 하나를 고르는 미니 퀴즈(예: MISSION 3의
+    // "발로란트가 실행될까?")의 정답 확인 기능입니다. 같은 data-group을 가진
+    // .choice-card 중 지금 선택된(.selected) 카드가, 버튼의 data-correct
+    // 값과 같은 data-item을 갖고 있는지 비교해서 초록(정답)/빨강(오답)
+    // 테두리와 결과 문구를 보여줍니다. 이 함수는 카드를 다시 고르면
+    // (위쪽 .choice-card 클릭 핸들러에서) 표시를 지우는 데도 쓰입니다.
+    function clearChoiceQuizCheck(group) {
+      if (!group) return;
+      document.querySelectorAll('.choice-card[data-group="' + group + '"]').forEach(function (card) {
+        card.classList.remove('choice-card--correct', 'choice-card--wrong');
+      });
+    }
+
+    document.querySelectorAll('.choice-check-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var group = btn.dataset.group;
+        var correct = btn.dataset.correct;
+        var resultEl = document.getElementById(btn.dataset.resultId || '');
+        clearChoiceQuizCheck(group);
+
+        var selected = document.querySelector('.choice-card[data-group="' + group + '"].selected');
+        if (!selected) {
+          if (resultEl) resultEl.textContent = '🙋 먼저 답을 골라주세요!';
+          return;
+        }
+        if (selected.dataset.item === correct) {
+          selected.classList.add('choice-card--correct');
+          if (resultEl) resultEl.textContent = '✅ 정답이에요!';
+        } else {
+          selected.classList.add('choice-card--wrong');
+          if (resultEl) resultEl.textContent = '❌ 오답이에요. 다시 생각해보세요!';
+        }
+      });
+    });
+
+    // 페이지를 열자마자 저장된 내용이 있으면 불러오고, 진행률을 계산한다
+    loadDraft();
+    // [수정 31-1] loadDraft()는 el.value를 곧바로 채워 넣을 뿐 input
+    // 이벤트를 일으키지 않으므로, 입력 속도 확인용 el.__safeValue가
+    // 방금 불러온 값과 다른(비어있는) 채로 남아있게 됩니다. 이 상태에서
+    // 학생이 첫 글자를 입력하면 "갑자기 글자가 왕창 늘어난 것"으로
+    // 잘못 판단해 불러온 내용을 지워버릴 수 있어, 여기서 다시 맞춰줍니다.
+    worksheetInputs().forEach(function (el) { el.__safeValue = el.value || ''; });
+    updateProgress();
+    // [수정 17-1] 임시 저장에서 불러온 긴 글도 페이지를 열자마자 늘어난
+    // 높이로 바로 보이도록, 여기서 모든 여러 줄 입력칸을 한 번 맞춰줍니다.
+    worksheetTextareas.forEach(autoGrowTextarea);
+
+    // [수정 14-2] 진행률 바의 고정 위치도 처음 한 번 계산하고,
+    // 화면 크기가 바뀌거나(탭 바 줄바꿈 변화) 웹폰트가 늦게 로딩되어
+    // 탭 바 높이가 바뀔 수 있는 경우에도 다시 계산해줍니다.
+    updateProgressStickyTop();
+    var progressStickyResizeTimer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(progressStickyResizeTimer);
+      progressStickyResizeTimer = setTimeout(updateProgressStickyTop, 150);
+    });
+    window.addEventListener('load', updateProgressStickyTop);
+
+    // 라이브러리를 못 불러와 브라우저 인쇄창(window.print())으로 대체된
+    // 경우에도, 인쇄창을 닫으면(afterprint) 마찬가지로 임시 저장을 지운다
+    window.addEventListener('afterprint', clearDraft);
+
+    // =========================================================================
+    // [수정 8-1] Aceternity "Wobble Card" 효과 — 이용 수칙 카드 위에서 마우스를
+    // 움직이면 카드 중심 대비 마우스 위치를 계산해 아주 살짝 따라오게(+확대)
+    // 만듭니다. 마우스가 있는 환경(hover:hover)에서만 켜고, 애니메이션을
+    // 줄여달라는 사용자 설정(prefers-reduced-motion)이면 아예 켜지 않습니다.
+    // =========================================================================
+    var supportsHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (supportsHover && !prefersReducedMotion) {
+      document.querySelectorAll('.rule-card').forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+          var rect = card.getBoundingClientRect();
+          var offsetX = (e.clientX - rect.left - rect.width / 2) / rect.width;   // -0.5 ~ 0.5
+          var offsetY = (e.clientY - rect.top - rect.height / 2) / rect.height;  // -0.5 ~ 0.5
+          var moveX = offsetX * 14; // 좌우로 최대 약 14px 이동
+          var moveY = offsetY * 14; // 상하로 최대 약 14px 이동
+          card.style.transform = 'translate3d(' + moveX + 'px,' + moveY + 'px,0) scale3d(1.03,1.03,1)';
+        });
+        card.addEventListener('mouseleave', function () {
+          card.style.transform = 'translate3d(0,0,0) scale3d(1,1,1)';
+        });
+      });
+    }
+
+    // =========================================================================
+    // [수정 3] "PDF로 저장하기" 버튼 동작
+    //
+    // 처음 버전은 화면(디스코드풍 어두운 테마)을 그대로 캡처했더니, 캡처 도구
+    // (html2canvas)가 CSS 변수/그라디언트를 완벽히 재현하지 못해 글씨가 흐리게
+    // 나오는 문제가 있었습니다. 그래서 지금은:
+    //   1) 학습지 내용을 그대로 복제(clone)해서 화면 밖(안 보이는 곳)에 따로 두고,
+    //   2) 그 복제본에는 "무조건 흰 배경 + 진한 검정 글씨"를 인라인 스타일로
+    //      직접 입혀서(색상 관련 CSS 변수를 전혀 쓰지 않음) 캡처가 잘못 그릴
+    //      여지를 없애고,
+    //   3) 그 복제본만 html2canvas로 캡처 → jsPDF로 PDF 생성 → 다운로드,
+    //   4) 복제본은 바로 제거합니다. (화면에 보이는 원본 페이지는 전혀 건드리지
+    //      않으므로 학생 눈에는 아무 변화가 없습니다)
+    //
+    // 파일 이름은 학습지 위쪽 "반 / 번호 / 이름" 입력값을 읽어서
+    // "20205 홍길동 컴퓨팅시스템 학습지.pdf" 형식(학년+반2자리+번호2자리 이름)으로
+    // 자동으로 만들어집니다. 세 칸을 다 채우지 않았다면 기본 이름으로 저장돼요.
+    //
+    // 만약 인터넷 연결이 없거나 학교 네트워크가 cdnjs.cloudflare.com을 막아
+    // 두 라이브러리를 못 불러왔다면(파일 위쪽의 [수정 0] 참고), 자동으로
+    // 브라우저 인쇄창을 여는 방식(window.print())으로 대신 동작합니다.
+    // =========================================================================
+    var saveBtn = document.getElementById('saveBtn');
+
+    // [수정 3-1] 파일 이름 자동 생성 규칙.
+    // 학년은 학습지 상단에 고정 표기된 "2학년"에 맞춰 '2'로 고정했습니다.
+    // 만약 이 페이지를 다른 학년 학습지로 재사용한다면 아래 GRADE 값만 바꾸세요.
+    var GRADE = '2';
+
+    function pad2(rawValue) {
+      var digits = (rawValue || '').replace(/[^0-9]/g, '');
+      return digits ? digits.padStart(2, '0') : '';
+    }
+    function sanitizeForFilename(rawValue) {
+      return (rawValue || '').trim().replace(/[\\/:*?"<>|]/g, '');
+    }
+    function buildPdfFileName() {
+      var classInput = document.querySelector('input[aria-label="반"]');
+      var numberInput = document.querySelector('input[aria-label="번호"]');
+      var nameInput = document.querySelector('input[aria-label="이름"]');
+
+      var classNum = pad2(classInput ? classInput.value : '');
+      var studentNum = pad2(numberInput ? numberInput.value : '');
+      var name = sanitizeForFilename(nameInput ? nameInput.value : '');
+
+      if (classNum && studentNum && name) {
+        // 예: 2반 5번 홍길동 → "20205 홍길동 컴퓨팅시스템 학습지.pdf"
+        return GRADE + classNum + studentNum + ' ' + name + ' 활동지.pdf';
+      }
+      // 반/번호/이름 중 하나라도 비어 있으면 기본 파일 이름을 사용합니다.
+      return '활동지.pdf';
+    }
+
+    // [수정 3-2] PDF로 캡처할 "흰 배경 + 검정 글씨" 인쇄용 복제본 만들기.
+    // 화면 밖(왼쪽으로 멀리)에 놓아 학생에게는 보이지 않지만, display:none이
+    // 아니라 실제로 레이아웃이 계산되므로 html2canvas가 정확히 캡처할 수 있습니다.
+    function buildPrintableClone() {
+      var original = document.querySelector('#tab-worksheet .sheet');
+      var clone = original.cloneNode(true);
+
+      var wrapper = document.createElement('div');
+      wrapper.id = 'pdf-export-root';
+      wrapper.style.cssText =
+        'position:fixed; top:0; left:-10000px; width:800px; ' +
+        'background:#ffffff; padding:32px; box-sizing:border-box; ' +
+        'font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;';
+
+      // 학습지 전체 배경/글자색을 인라인으로 강제 지정 (CSS 변수 미사용 → 가장 확실한 방법)
+      clone.style.cssText = 'background:#ffffff; color:#111111; border:none; padding:0; width:100%;';
+
+      // [수정 20] 여러 줄 입력칸(textarea)은 html2canvas가 글자 줄바꿈을
+      // 정확히 캡처하지 못해서, 두 줄이 넘어가는 답변이 PDF에서 잘려
+      // 보이지 않는 문제가 있었습니다. 그래서 PDF용 복제본에서는
+      // textarea를 통째로 일반 글상자(div)로 바꿔치기합니다 — 학생이
+      // 입력한 글자(원본 요소의 실제 값)를 그대로 담되, 보통 텍스트처럼
+      // 줄바꿈되게 해서 html2canvas가 있는 그대로 정확히 그려주도록
+      // 했습니다. 화면 스타일과 똑같아 보이도록 배경/테두리/둥근 모서리도
+      // 함께 맞춰줍니다.
+      clone.querySelectorAll('textarea.blank').forEach(function (el) {
+        var label = el.getAttribute('aria-label');
+        var liveEl = label
+          ? original.querySelector('textarea.blank[aria-label="' + label + '"]')
+          : null;
+        var text = liveEl ? liveEl.value : el.value;
+
+        var div = document.createElement('div');
+        div.className = 'pdf-answer-block';
+        div.textContent = text; // 비어 있으면 빈 상자로만 보임(정상)
+        div.style.cssText =
+          'display:block; width:100%; min-height:38px; box-sizing:border-box; ' +
+          'font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif; font-size:15px; ' +
+          'line-height:1.5; color:#111111; -webkit-text-fill-color:#111111; ' +
+          'background:#ffffff; border:1.5px solid #111111; border-radius:10px; ' +
+          'padding:6px 14px; margin-top:4px; white-space:pre-wrap; ' +
+          'overflow-wrap:break-word; word-break:break-word;';
+        el.parentNode.replaceChild(div, el);
+      });
+
+      clone.querySelectorAll('.sheet-header').forEach(function (el) {
+        el.style.borderBottom = '2px solid #111111';
+      });
+      clone.querySelectorAll('.section-block h3').forEach(function (el) {
+        // [수정 38] 화면에서는 미션마다 색 헤더 바를 쓰지만, PDF로 저장할
+        // 때는 @media print와 똑같이 배경을 흰색으로, 글자를 검정으로
+        // 바꿔서 잉크 낭비 없이 깔끔하게 인쇄되도록 합니다.
+        el.style.cssText += 'background:#ffffff; color:#111111; border-bottom:2px solid #111111;';
+      });
+      clone.querySelectorAll('.section-block h3 .badge').forEach(function (el) {
+        el.style.cssText =
+          'display:inline-block; background:#eeeeee; color:#111111; border:1px solid #999999; ' +
+          'padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600;';
+      });
+      clone.querySelectorAll('.fill-line, .fill-line b, .hint, .quiz-item p, .id-fields, .id-fields span')
+        .forEach(function (el) { el.style.color = '#111111'; });
+      clone.querySelectorAll('table.sheet-table').forEach(function (el) {
+        el.style.background = '#ffffff';
+      });
+      clone.querySelectorAll('table.sheet-table th').forEach(function (el) {
+        el.style.cssText += 'background:#eeeeee; color:#111111; border-color:#999999;';
+      });
+      clone.querySelectorAll('table.sheet-table td').forEach(function (el) {
+        el.style.cssText += 'color:#111111; border-color:#999999;';
+      });
+      clone.querySelectorAll('.quiz-item').forEach(function (el) {
+        el.style.cssText += 'background:#fafafa; border:1px solid #dddddd;';
+      });
+      // MISSION 5 형성평가(O/X 버튼 문항) — 정답/오답 표시도 짝짓기 칸과
+      // 똑같이 초록/빨강 테두리로 그대로 옮겨줍니다.
+      clone.querySelectorAll('.ox-quiz-item').forEach(function (el) {
+        var borderRule = 'border:2px solid #dddddd;';
+        if (el.classList.contains('ox-quiz-item--correct')) borderRule = 'border:2px solid #1f9d55; background:rgba(31,157,85,0.1);';
+        else if (el.classList.contains('ox-quiz-item--wrong')) borderRule = 'border:2px solid #e5484d; background:rgba(229,72,77,0.1);';
+        else el.style.background = '#fafafa';
+        el.style.cssText += borderRule;
+      });
+      clone.querySelectorAll('.ox-quiz-item p').forEach(function (el) { el.style.color = '#111111'; });
+      // 빈칸 입력창: 배경 흰색 + 아주 진한 검정 글씨 + 둥근 테두리 상자로 또렷하게 표시
+      // (여러 줄 입력칸은 위에서 이미 .pdf-answer-block div로 바뀌어 자체 스타일을 갖고 있음)
+      clone.querySelectorAll('input.blank').forEach(function (el) {
+        el.style.cssText +=
+          'background:#ffffff; color:#111111; -webkit-text-fill-color:#111111; ' +
+          'border:1.5px solid #111111; border-radius:10px;';
+      });
+      clone.querySelectorAll('input.ox-input').forEach(function (el) {
+        el.style.cssText +=
+          'background:#ffffff; color:#111111; -webkit-text-fill-color:#111111; ' +
+          'border:1.5px solid #111111; border-radius:999px;';
+      });
+      // 골라보기 카드: 선택된 카드는 연두색, 안 고른 카드는 흰 바탕으로 구분되게.
+      // [수정 39] 문장형 미니 퀴즈에서 "정답 확인"을 눌러 오답으로 표시된
+      // 카드는(선택은 됐지만 틀림) 빨간색으로 구분해서 저장됩니다.
+      clone.querySelectorAll('.choice-card').forEach(function (el) {
+        var selected = el.classList.contains('selected');
+        var isWrong = el.classList.contains('choice-card--wrong');
+        var colorRule;
+        if (isWrong) colorRule = 'background:#fdecec; border:2px solid #e5484d; color:#111111;';
+        else if (selected) colorRule = 'background:#e8fbef; border:2px solid #1f9d55; color:#111111;';
+        else colorRule = 'background:#ffffff; border:2px solid #999999; color:#111111;';
+        el.style.cssText =
+          'display:inline-flex; align-items:center; gap:8px; border-radius:16px; ' +
+          'padding:10px 16px; font-size:15px; ' + colorRule;
+      });
+      // 짝짓기: 이름표(칩)와 칸을 흑백 인쇄에서도 잘 구분되게
+      clone.querySelectorAll('.dnd-tray').forEach(function (el) {
+        el.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; padding:14px; background:#f3f3f3; border-radius:16px; margin-bottom:12px; min-height:50px;';
+      });
+      clone.querySelectorAll('.dnd-row').forEach(function (el) {
+        var isCenter = el.classList.contains('dnd-row--center');
+        var justify = isCenter ? 'center' : 'flex-start';
+        var gap = isCenter ? '0' : '14px';
+        el.style.cssText = 'display:flex; align-items:center; justify-content:' + justify + '; gap:' + gap + '; background:#fafafa; border:1px solid #dddddd; border-radius:14px; padding:10px 14px; margin-bottom:8px;';
+        if (isCenter) {
+          var label = el.querySelector('p');
+          if (label) { label.style.flex = '0 0 auto'; label.style.marginRight = '50px'; }
+          var slots = el.querySelectorAll('.dnd-slot');
+          if (slots.length > 1) slots[1].style.marginLeft = '16px';
+        }
+      });
+      clone.querySelectorAll('.dnd-row p').forEach(function (el) { el.style.color = '#111111'; });
+      clone.querySelectorAll('.dnd-slot').forEach(function (el) {
+        var borderRule = 'border:2px dashed #999999;';
+        if (el.classList.contains('dnd-slot--correct')) borderRule = 'border:2px solid #1f9d55; background:rgba(31,157,85,0.1);';
+        else if (el.classList.contains('dnd-slot--wrong')) borderRule = 'border:2px solid #e5484d; background:rgba(229,72,77,0.1);';
+        el.style.cssText = 'min-width:110px; min-height:36px; ' + borderRule + ' border-radius:16px; display:flex; align-items:center; justify-content:center; color:#777777; font-size:12.5px;';
+      });
+      clone.querySelectorAll('.dnd-chip').forEach(function (el) {
+        el.style.cssText = 'background:#e5e7ff; color:#111111; font-weight:700; font-size:14px; padding:8px 18px; border-radius:999px; border:1.5px solid #5865f2;';
+      });
+      // [수정 16] 안내 상자(콜아웃) 3종 — 배경/테두리는 밝게, 글자는 진하게
+      clone.querySelectorAll('.callout').forEach(function (el) {
+        el.style.cssText += 'background:#fafafa; border:1px solid #dddddd; border-left-width:4px;';
+      });
+      clone.querySelectorAll('.callout h4, .callout h3').forEach(function (el) { el.style.color = '#111111'; });
+      clone.querySelectorAll('.callout p, .callout-list, .callout-list li').forEach(function (el) { el.style.color = '#333333'; });
+      clone.querySelectorAll('.callout .example-q').forEach(function (el) { el.style.color = '#111111'; });
+      clone.querySelectorAll('.callout--goal').forEach(function (el) { el.style.borderLeftColor = '#5865f2'; });
+      clone.querySelectorAll('.callout--tip').forEach(function (el) { el.style.borderLeftColor = '#1f9d55'; });
+      clone.querySelectorAll('.callout--gemini').forEach(function (el) {
+        el.style.cssText += 'border-left-color:#ec48bd; background:#fdf1fa;';
+      });
+      clone.querySelectorAll('.callout--gemini h4').forEach(function (el) { el.style.color = '#ec48bd'; });
+      // "PDF로 저장하기" 버튼/안내문 자체는 PDF 결과물에 나오면 안 되므로 숨긴다
+      clone.querySelectorAll('.no-print').forEach(function (el) {
+        el.style.display = 'none';
+      });
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      // [수정 20] 여러 줄 입력칸은 이제 일반 글상자(div, .pdf-answer-block)로
+      // 바뀌어 있어서, 보통 문단처럼 내용 길이에 맞춰 높이가 자동으로
+      // 정해집니다(별도 높이 재계산이 필요 없음).
+
+      return wrapper;
+    }
+
+    // [수정 19] PDF 쪽 나누기(페이지 넘김) 위치를 정할 때, 내용 중간이
+    // 잘리지 않도록 "이 안에서는 절대 자르면 안 되는 덩어리(블록)" 목록을
+    // 모읍니다. 안내 상자(.callout), 표 전체(.table-scroll), 짝짓기 한
+    // 줄(.dnd-row)과 이름표 묶음(.dnd-tray), 골라보기 카드 줄, 빈칸
+    // 하나하나가 각각 하나의 블록이고, 소제목(h3)이나 안내 문장(hint,
+    // fill-line)은 바로 다음 내용과 함께 한 덩어리로 묶어서, 제목만
+    // 페이지 맨 아래 혼자 남는 일도 막아줍니다.
+    function collectPdfBreakBlocks(root) {
+      var blocks = [];
+      root.querySelectorAll('h3, p.hint, p.fill-line').forEach(function (el) {
+        var next = el.nextElementSibling;
+        blocks.push({ topEl: el, bottomEl: next || el });
+      });
+      root.querySelectorAll(
+        '.sheet-header, .callout, .table-scroll, .choice-card-row, .quiz-item, .ox-quiz-item, .dnd-tray, .dnd-row, .dnd-grid-2col, .pdf-answer-block, input.blank'
+      ).forEach(function (el) {
+        blocks.push({ topEl: el, bottomEl: el });
+      });
+      return blocks;
+    }
+
+    // wrapper(복제본) 안에서 캡처된 canvas 위에, "이 y좌표들 사이에서는
+    // 자르면 안 된다"는 구간 목록을 계산합니다. 반환값은 canvas의 픽셀
+    // 좌표 기준입니다.
+    function computePdfBreakPoints(wrapper, canvas) {
+      var wrapperRect = wrapper.getBoundingClientRect();
+      var domToCanvas = canvas.height / wrapperRect.height;
+
+      var forbidden = collectPdfBreakBlocks(wrapper).map(function (b) {
+        var topRect = b.topEl.getBoundingClientRect();
+        var bottomRect = b.bottomEl.getBoundingClientRect();
+        return {
+          top: (topRect.top - wrapperRect.top) * domToCanvas,
+          bottom: (bottomRect.bottom - wrapperRect.top) * domToCanvas
+        };
+      });
+
+      return { forbidden: forbidden };
+    }
+    // 위에서 구한 "자르면 안 되는 구간" 정보를 이용해, 한 페이지에 들어갈
+    // 수 있는 최대 높이(pageHeightCanvasPx)를 넘지 않으면서도 그 구간을
+    // 절대 가로지르지 않는 안전한 다음 쪽 나누기 지점을 찾습니다.
+    function findSafeBreak(cursor, idealEnd, canvasHeight, forbidden) {
+      if (idealEnd >= canvasHeight) return canvasHeight;
+      // 후보 위치를 안전해질 때까지 계속 밀어 올립니다 — 겹쳐 있는
+      // 덩어리(예: "제목+바로 다음 내용" 묶음과 그 안의 안내 상자)를
+      // 한 번에 피했다고 끝나는 게 아니라, 새로 옮긴 위치가 또 다른
+      // 덩어리 안에 걸리지는 않는지 안전해질 때까지 반복 확인합니다.
+      var candidate = idealEnd;
+      var guard = 0;
+      while (guard < 200) {
+        guard++;
+        var offenderTop = null;
+        for (var i = 0; i < forbidden.length; i++) {
+          var b = forbidden[i];
+          if (b.top < candidate - 0.5 && b.bottom > candidate + 0.5 && b.top > cursor) {
+            if (offenderTop === null || b.top < offenderTop) offenderTop = b.top;
+          }
+        }
+        if (offenderTop === null) break;
+        candidate = offenderTop;
+      }
+      // 블록 하나가 페이지 한 장보다 커서 도저히 못 피하는 경우를 대비한
+      // 안전장치 — 그럴 때만 어쩔 수 없이 원래 위치에서 자릅니다.
+      if (candidate <= cursor + 10) candidate = idealEnd;
+      return candidate;
+    }
+
+    async function handleSavePdf() {
+      // [수정 21-1] 이름을 입력하지 않았다면 저장을 막고 안내 팝업을 띄운다
+      var nameCheckInput = document.querySelector('input[aria-label="이름"]');
+      if (!nameCheckInput || !nameCheckInput.value.trim()) {
+        alert('이름을 입력하세요');
+        return;
+      }
+
+      // [수정 21-2] 진행률이 70%를 넘지 않았다면 저장을 막고 안내 팝업을 띄운다
+      if (currentProgressPct <= 70) {
+        alert('모든 문제를 풀어주세요');
+        return;
+      }
+
+      // 라이브러리가 정상적으로 로드되지 않았다면 → 인쇄창으로 대체
+      if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+        window.print();
+        return;
+      }
+
+      var originalLabel = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ PDF 만드는 중...';
+
+      var wrapper = buildPrintableClone();
+      // 복제본이 실제로 레이아웃을 계산할 시간을 아주 살짝 준다
+      await new Promise(function (resolve) { setTimeout(resolve, 60); });
+
+      try {
+        var canvas = await html2canvas(wrapper, {
+          scale: 2,               // 화질을 2배로 (글씨가 흐릿하지 않도록)
+          backgroundColor: '#ffffff',
+          useCORS: true
+        });
+
+        var jsPDF = window.jspdf.jsPDF;
+        var pdf = new jsPDF('p', 'pt', 'a4'); // p=세로, pt=포인트 단위, a4=A4 용지
+        var pageWidth = pdf.internal.pageSize.getWidth();
+        var pageHeight = pdf.internal.pageSize.getHeight();
+        var imgWidth = pageWidth;
+        // 한 페이지(A4 세로)에 들어가는 높이를, 캡처된 canvas의 픽셀
+        // 단위로 환산한 값입니다.
+        var pageHeightCanvasPx = pageHeight * (canvas.width / imgWidth);
+
+        // [수정 19] 내용 중간이 페이지 경계에서 잘리지 않도록, 표/안내
+        // 상자/짝짓기 줄/빈칸 같은 "덩어리"를 절대 가로지르지 않는
+        // 위치에서만 다음 페이지로 넘어가게 계산합니다.
+        var breakInfo = computePdfBreakPoints(wrapper, canvas);
+        var breakPoints = [0];
+        var cursor = 0;
+        while (cursor < canvas.height) {
+          var idealEnd = cursor + pageHeightCanvasPx;
+          var safeEnd = findSafeBreak(cursor, idealEnd, canvas.height, breakInfo.forbidden);
+          breakPoints.push(safeEnd);
+          cursor = safeEnd;
+        }
+
+        // 계산된 위치대로 canvas를 페이지별로 잘라서 한 장씩 PDF에 담는다
+        for (var p = 0; p < breakPoints.length - 1; p++) {
+          var yStart = breakPoints[p];
+          var yEnd = breakPoints[p + 1];
+          var sliceCanvasHeight = yEnd - yStart;
+          if (sliceCanvasHeight <= 0) continue;
+
+          var pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceCanvasHeight;
+          var ctx = pageCanvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(canvas, 0, -yStart);
+
+          var sliceImgData = pageCanvas.toDataURL('image/png');
+          var sliceHeightPt = sliceCanvasHeight * (imgWidth / canvas.width);
+
+          if (p > 0) pdf.addPage();
+          pdf.addImage(sliceImgData, 'PNG', 0, 0, imgWidth, sliceHeightPt);
+        }
+
+        pdf.save(buildPdfFileName());
+
+        // [수정 10-2] PDF 저장에 성공하면 임시 저장본은 지운다 — 다음 학생이
+        // 같은 컴퓨터에서 이 페이지를 열었을 때 이전 학생의 답이 보이지 않도록.
+        clearDraft();
+      } catch (err) {
+        console.error('PDF 생성 실패:', err);
+        alert('PDF를 만드는 중 문제가 생겼어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+      } finally {
+        wrapper.remove();
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalLabel;
+      }
+    }
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', handleSavePdf);
+    }
+  })();
+</script>
+
+</body>
+</html>
